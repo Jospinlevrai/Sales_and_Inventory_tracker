@@ -7,8 +7,8 @@ public class DBConnection {
  Connection con;
 
 String url = "jdbc:postgresql://localhost:5432/Inventory_tracker";
-String user = "postgres";
-String password = "JOSpin2006";
+String user = "DB_USER";
+String password = "DB_PASSWORD";
 
     public DBConnection() {
 
