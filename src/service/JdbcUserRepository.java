@@ -2,6 +2,10 @@ package service;
 
 import model.User;
 
+import service.DBConnection;
+import service.UserRepository;
+
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

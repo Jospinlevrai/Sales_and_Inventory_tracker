@@ -10,6 +10,10 @@ import dto.RecentSale;
 import model.Sale;
 import model.Stock_movement;
 
+import service.DBConnection;
+
+
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;

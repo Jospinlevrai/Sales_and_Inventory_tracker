@@ -2,6 +2,8 @@ package service;
 
 import model.Sale;
 import model.Sale_item;
+import service.DBConnection;
+import service.SaleRepository;
 
 import java.sql.*;
 import java.time.LocalDateTime;

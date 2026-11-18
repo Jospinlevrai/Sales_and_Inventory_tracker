@@ -2,6 +2,8 @@ package service;
 
 import model.Purchase;
 import model.PurchaseItem;
+import service.DBConnection;
+import service.PurchaseRepository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

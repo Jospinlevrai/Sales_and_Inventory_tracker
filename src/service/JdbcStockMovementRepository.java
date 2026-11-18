@@ -1,6 +1,8 @@
 package service;
 
 import model.Stock_movement;
+import service.DBConnection;
+import service.StockMovementRepository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

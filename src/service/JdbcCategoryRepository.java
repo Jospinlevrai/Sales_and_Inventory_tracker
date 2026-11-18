@@ -1,6 +1,12 @@
 package service;
 
 import model.Category;
+import repository.CategoryRepository;
+<<<<<<< HEAD:src/service/JdbcCategoryRepository.java
+import service.CategoryRepository;
+import service.DBConnection;
+=======
+>>>>>>> origin/main:src/repository/JdbcCategoryRepository.java
 
 import java.sql.*;
 import java.util.ArrayList;
