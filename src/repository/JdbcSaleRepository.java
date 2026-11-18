@@ -3,18 +3,14 @@ package service;
 import model.Sale;
 import model.Sale_item;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class JdbcSaleRepository implements SaleRepository {
-    private final Database database;
+    private final DBConnection database;
 
-    public JdbcSaleRepository(Database database) {
+    public JdbcSaleRepository(DBConnection database) {
         this.database = database;
     }
 
@@ -44,7 +40,7 @@ public class JdbcSaleRepository implements SaleRepository {
     }
 
     @Override
-    public SaleItem saveItem(SaleItem item) {
+    public Sale_item saveItem(Sale_item item) {
         return database.withConnection(connection -> {
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO Sale_Items(sale_id, product_id, quantity, unit_price, unit_cost) "
@@ -79,9 +75,9 @@ public class JdbcSaleRepository implements SaleRepository {
     }
 
     @Override
-    public List<SaleItem> findItems(int saleId) {
+    public List<Sale_item> findItems(int saleId) {
         return database.withConnection(connection -> {
-            List<SaleItem> items = new ArrayList<>();
+            List<Sale_item> items = new ArrayList<>();
             try (PreparedStatement statement = connection.prepareStatement(
                     "SELECT * FROM Sale_Items WHERE sale_id = ? ORDER BY sale_item_id")) {
                 statement.setInt(1, saleId);
@@ -115,8 +111,8 @@ public class JdbcSaleRepository implements SaleRepository {
                 Sale.Status.valueOf(rows.getString("status")), rows.getString("notes"));
     }
 
-    private static SaleItem mapItem(ResultSet rows) throws SQLException {
-        return new SaleItem(rows.getInt("sale_item_id"), rows.getInt("sale_id"), rows.getInt("product_id"),
+    private static Sale_item mapItem(ResultSet rows) throws SQLException {
+        return new Sale_item(rows.getInt("sale_item_id"), rows.getInt("sale_id"), rows.getInt("product_id"),
                 rows.getInt("quantity"), rows.getBigDecimal("unit_price"), rows.getBigDecimal("unit_cost"));
     }
 }
