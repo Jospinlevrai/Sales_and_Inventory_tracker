@@ -4,9 +4,7 @@ import exception.BusinessRuleException;
 import model.Product;
 import model.Stock_movement;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class StockServiceImpl implements StockService {
     private final ProductRepository products;
@@ -31,7 +29,7 @@ public class StockServiceImpl implements StockService {
         transactions.run(() -> {
             products.findById(productId)
                     .orElseThrow(() -> new BusinessRuleException("Product " + productId + " does not exist"));
-            ledger.record(productId, userId, StockMovement.MovementType.ADJUSTMENT, quantityChange,
+            ledger.record(productId, userId, Stock_movement.MovementType.ADJUSTMENT, quantityChange,
                     null, null, reason.trim());
         });
     }

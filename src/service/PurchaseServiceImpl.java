@@ -8,13 +8,9 @@ import model.PurchaseItem;
 import model.Stock_movement;
 import model.Supplier;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.math.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class PurchaseServiceImpl implements PurchaseService {
     private final SupplierRepository suppliers;
@@ -75,7 +71,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             for (PurchaseItem item : items) {
                 item.setPurchaseId(purchase.getPurchaseId());
                 purchases.saveItem(item);
-                ledger.record(item.getProductId(), purchase.getUserId(), StockMovement.MovementType.PURCHASE,
+                ledger.record(item.getProductId(), purchase.getUserId(), Stock_movement.MovementType.PURCHASE,
                         item.getQuantity(), null, purchase.getPurchaseId(), null);
                 products.updateCostPrice(item.getProductId(), item.getUnitCost());
             }

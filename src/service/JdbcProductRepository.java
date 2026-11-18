@@ -1,20 +1,25 @@
 package service;
 
 import model.Product;
+import service.DBConnection;
+import service.ProductCatalogRepository;
+import service.ProductRepository;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
-public class JdbcProductRepository implements ProductRepository {
-    private final Database database;
+public class JdbcProductRepository implements ProductRepository, ProductCatalogRepository {
+    private final DBConnection database;
 
-    public JdbcProductRepository(Database database) {
+    public JdbcProductRepository(DBConnection database) {
         this.database = database;
     }
 
@@ -72,6 +77,136 @@ public class JdbcProductRepository implements ProductRepository {
                 return statement.executeUpdate();
             }
         });
+    }
+
+    @Override
+    public List<Product> findAll() {
+        return database.withConnection(connection -> {
+            List<Product> products = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM Products ORDER BY product_name");
+                 ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    products.add(map(rows));
+                }
+            }
+            return products;
+        });
+    }
+
+    @Override
+    public List<Product> search(String text, Integer categoryId) {
+        String pattern = "%" + escapeLike(text == null ? "" : text.trim().toLowerCase(Locale.ROOT)) + "%";
+        return database.withConnection(connection -> {
+            List<Product> products = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM Products WHERE is_active "
+                            + "AND (CAST(? AS INTEGER) IS NULL OR category_id = CAST(? AS INTEGER)) "
+                            + "AND (LOWER(product_name) LIKE ? ESCAPE '\\' OR LOWER(sku) LIKE ? ESCAPE '\\' "
+                            + "OR LOWER(COALESCE(barcode, '')) LIKE ? ESCAPE '\\') ORDER BY product_name")) {
+                statement.setObject(1, categoryId, Types.INTEGER);
+                statement.setObject(2, categoryId, Types.INTEGER);
+                statement.setString(3, pattern);
+                statement.setString(4, pattern);
+                statement.setString(5, pattern);
+                try (ResultSet rows = statement.executeQuery()) {
+                    while (rows.next()) {
+                        products.add(map(rows));
+                    }
+                }
+            }
+            return products;
+        });
+    }
+
+    @Override
+    public Product save(Product product) {
+        return database.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "INSERT INTO Products(category_id, supplier_id, sku, barcode, product_name, description, unit, cost_price, "
+                            + "selling_price, quantity_in_stock, reorder_level, is_active, created_at, updated_at) "
+                            + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING product_id")) {
+                statement.setInt(1, product.getCategoryId());
+                statement.setObject(2, product.getSupplierId(), Types.INTEGER);
+                statement.setString(3, product.getSku());
+                statement.setString(4, product.getBarcode());
+                statement.setString(5, product.getProductName());
+                statement.setString(6, product.getDescription());
+                statement.setString(7, product.getUnit());
+                statement.setBigDecimal(8, product.getCostPrice());
+                statement.setBigDecimal(9, product.getSellingPrice());
+                statement.setInt(10, product.getQuantityInStock());
+                statement.setInt(11, product.getReorderLevel());
+                statement.setBoolean(12, product.isActive());
+                statement.setObject(13, product.getCreatedAt());
+                statement.setObject(14, product.getUpdatedAt());
+                try (ResultSet generated = statement.executeQuery()) {
+                    generated.next();
+                    product.setProductId(generated.getInt("product_id"));
+                }
+                return product;
+            }
+        });
+    }
+
+    @Override
+    public void update(Product product) {
+        database.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE Products SET category_id = ?, supplier_id = ?, sku = ?, barcode = ?, product_name = ?, description = ?, "
+                            + "unit = ?, cost_price = ?, selling_price = ?, reorder_level = ?, updated_at = CURRENT_TIMESTAMP "
+                            + "WHERE product_id = ?")) {
+                statement.setInt(1, product.getCategoryId());
+                statement.setObject(2, product.getSupplierId(), Types.INTEGER);
+                statement.setString(3, product.getSku());
+                statement.setString(4, product.getBarcode());
+                statement.setString(5, product.getProductName());
+                statement.setString(6, product.getDescription());
+                statement.setString(7, product.getUnit());
+                statement.setBigDecimal(8, product.getCostPrice());
+                statement.setBigDecimal(9, product.getSellingPrice());
+                statement.setInt(10, product.getReorderLevel());
+                statement.setInt(11, product.getProductId());
+                return statement.executeUpdate();
+            }
+        });
+    }
+
+    @Override
+    public void setActive(int productId, boolean active) {
+        database.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "UPDATE Products SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE product_id = ?")) {
+                statement.setBoolean(1, active);
+                statement.setInt(2, productId);
+                return statement.executeUpdate();
+            }
+        });
+    }
+
+    @Override
+    public boolean skuExists(String sku, int excludeProductId) {
+        return exists("SELECT 1 FROM Products WHERE LOWER(sku) = LOWER(?) AND product_id <> ?", sku, excludeProductId);
+    }
+
+    @Override
+    public boolean barcodeExists(String barcode, int excludeProductId) {
+        return exists("SELECT 1 FROM Products WHERE LOWER(barcode) = LOWER(?) AND product_id <> ?", barcode, excludeProductId);
+    }
+
+    private boolean exists(String sql, String text, int excludeId) {
+        return database.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                statement.setString(1, text);
+                statement.setInt(2, excludeId);
+                try (ResultSet rows = statement.executeQuery()) {
+                    return rows.next();
+                }
+            }
+        });
+    }
+
+    private static String escapeLike(String text) {
+        return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private static Product map(ResultSet rows) throws SQLException {

@@ -2,14 +2,16 @@ package service;
 
 import model.Purchase;
 import model.PurchaseItem;
+import service.DBConnection;
+import service.PurchaseRepository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class JdbcPurchaseRepository implements PurchaseRepository {
-    private final Database database;
+    private final DBConnection database;
 
-    public JdbcPurchaseRepository(Database database) {
+    public JdbcPurchaseRepository(DBConnection database) {
         this.database = database;
     }
 

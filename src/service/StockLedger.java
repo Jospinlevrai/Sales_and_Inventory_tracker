@@ -14,7 +14,7 @@ final class StockLedger {
         this.movements = movements;
     }
 
-    void record(int productId, int userId, StockMovement.MovementType type, int quantityChange,
+    void record(int productId, int userId, Stock_movement.MovementType type, int quantityChange,
                 Integer saleId, Integer purchaseId, String note) {
         if (!products.changeStock(productId, quantityChange)) {
             Product product = products.findById(productId).orElse(null);
@@ -22,7 +22,7 @@ final class StockLedger {
             int available = product == null ? 0 : product.getQuantityInStock();
             throw new InsufficientStockException(name, available, -quantityChange);
         }
-        StockMovement movement = new StockMovement();
+        Stock_movement movement = new Stock_movement();
         movement.setProductId(productId);
         movement.setUserId(userId);
         movement.setMovementType(type);

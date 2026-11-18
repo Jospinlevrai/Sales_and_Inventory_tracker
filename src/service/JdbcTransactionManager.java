@@ -1,14 +1,16 @@
 package service;
 
 import exception.DataAccessException;
+import service.DBConnection;
+import service.TransactionManager;
 
 import java.sql.SQLException;
 import java.util.function.Supplier;
 
 public class JdbcTransactionManager implements TransactionManager {
-    private final Database database;
+    private final DBConnection database;
 
-    public JdbcTransactionManager(Database database) {
+    public JdbcTransactionManager(DBConnection database) {
         this.database = database;
     }
 

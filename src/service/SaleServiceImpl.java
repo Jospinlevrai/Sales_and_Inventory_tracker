@@ -10,10 +10,7 @@ import model.Stock_movement;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class SaleServiceImpl implements SaleService {
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
@@ -39,9 +36,9 @@ public class SaleServiceImpl implements SaleService {
         Map<Integer, Integer> quantities = mergeLines(request.getLines());
 
         return transactions.execute(() -> {
-            List<SaleItem> items = buildItems(quantities);
+            List<Sale_item> items = buildItems(quantities);
             BigDecimal subtotal = BigDecimal.ZERO;
-            for (SaleItem item : items) {
+            for (Sale_item item : items) {
                 subtotal = subtotal.add(item.getLineTotal());
             }
             if (discount.compareTo(subtotal) > 0) {
@@ -58,10 +55,10 @@ public class SaleServiceImpl implements SaleService {
             sale.setNotes(request.getNotes());
             sale = sales.save(sale);
 
-            for (SaleItem item : items) {
+            for (Sale_item item : items) {
                 item.setSaleId(sale.getSaleId());
                 sales.saveItem(item);
-                ledger.record(item.getProductId(), sale.getUserId(), StockMovement.MovementType.SALE,
+                ledger.record(item.getProductId(), sale.getUserId(), Stock_movement.MovementType.SALE,
                         -item.getQuantity(), sale.getSaleId(), null, null);
             }
             return sale;
@@ -83,8 +80,8 @@ public class SaleServiceImpl implements SaleService {
                 throw new BusinessRuleException("Sale " + sale.getReceiptNo() + " is already voided");
             }
             sales.updateStatus(saleId, Sale.Status.VOIDED);
-            for (SaleItem item : sales.findItems(saleId)) {
-                ledger.record(item.getProductId(), userId, StockMovement.MovementType.SALE_VOID,
+            for (Sale_item item : sales.findItems(saleId)) {
+                ledger.record(item.getProductId(), userId, Stock_movement.MovementType.SALE_VOID,
                         item.getQuantity(), saleId, null, reason.trim());
             }
         });
@@ -127,8 +124,8 @@ public class SaleServiceImpl implements SaleService {
     }
 
     /** Checks every product and copies its current price and cost onto the sale line. */
-    private List<SaleItem> buildItems(Map<Integer, Integer> quantities) {
-        List<SaleItem> items = new ArrayList<>();
+    private List<Sale_item> buildItems(Map<Integer, Integer> quantities) {
+        List<Sale_item> items = new ArrayList<>();
         for (Map.Entry<Integer, Integer> line : quantities.entrySet()) {
             Product product = products.findById(line.getKey())
                     .orElseThrow(() -> new BusinessRuleException("Product " + line.getKey() + " does not exist"));
@@ -138,7 +135,7 @@ public class SaleServiceImpl implements SaleService {
             if (product.getQuantityInStock() < line.getValue()) {
                 throw new InsufficientStockException(product.getProductName(), product.getQuantityInStock(), line.getValue());
             }
-            items.add(new SaleItem(product.getProductId(), line.getValue(), product.getSellingPrice(), product.getCostPrice()));
+            items.add(new Sale_item(product.getProductId(), line.getValue(), product.getSellingPrice(), product.getCostPrice()));
         }
         return items;
     }

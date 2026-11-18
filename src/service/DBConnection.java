@@ -10,8 +10,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Properties;
 
-/** Opens connections to PostgreSQL and remembers the connection of the transaction running on this thread. */
-public class Database {
+public class DBConnection {
     /** A piece of JDBC work that is given a connection. */
     interface Work<T> {
         T apply(Connection connection) throws SQLException;
@@ -22,14 +21,19 @@ public class Database {
     private final String password;
     private final ThreadLocal<Connection> transaction = new ThreadLocal<>();
 
-    public Database(String url, String user, String password) {
+    /** Uses these default settings. Edit them, or build the object with DBConnection.fromFile("db.properties"). */
+    public DBConnection() {
+        this("jdbc:postgresql://localhost:5432/Inventory_tracker", "DB_USER", "DB_PASSWORD");
+    }
+
+    public DBConnection(String url, String user, String password) {
         this.url = url;
         this.user = user;
         this.password = password;
     }
 
-    /** Reads db.url, db.user and db.password from a properties file. */
-    public static Database fromFile(String path) {
+    /** Reads db.url, db.user and db.password from a properties file, so passwords stay out of the code. */
+    public static DBConnection fromFile(String path) {
         Properties properties = new Properties();
         try (InputStream in = new FileInputStream(path)) {
             properties.load(in);
@@ -40,7 +44,21 @@ public class Database {
         if (url == null || url.trim().isEmpty()) {
             throw new IllegalArgumentException("db.url is missing in " + path);
         }
-        return new Database(url.trim(), properties.getProperty("db.user"), properties.getProperty("db.password"));
+        return new DBConnection(url.trim(), properties.getProperty("db.user"), properties.getProperty("db.password"));
+    }
+
+    /** Opens a new connection; the caller closes it. Throws DataAccessException instead of returning null. */
+    public Connection getConnection() {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new DataAccessException("PostgreSQL driver not found: add the postgresql jar to the project", e);
+        }
+        try {
+            return DriverManager.getConnection(url, user, password);
+        } catch (SQLException e) {
+            throw new DataAccessException("Database connection failed: " + e.getMessage(), e);
+        }
     }
 
     /** Runs the work on the running transaction's connection, or on a short-lived connection when there is none. */
@@ -50,7 +68,7 @@ public class Database {
             if (running != null) {
                 return work.apply(running);
             }
-            try (Connection connection = open()) {
+            try (Connection connection = getConnection()) {
                 return work.apply(connection);
             }
         } catch (SQLException e) {
@@ -63,7 +81,7 @@ public class Database {
     }
 
     void begin() throws SQLException {
-        Connection connection = open();
+        Connection connection = getConnection();
         try {
             connection.setAutoCommit(false);
         } catch (SQLException e) {
@@ -98,9 +116,5 @@ public class Database {
                 // nothing more can be done
             }
         }
-    }
-
-    private Connection open() throws SQLException {
-        return DriverManager.getConnection(url, user, password);
     }
 }

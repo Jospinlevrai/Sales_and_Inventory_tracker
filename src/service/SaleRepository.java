@@ -11,11 +11,11 @@ public interface SaleRepository {
     Sale save(Sale sale);
 
     /** Inserts one line of the sale given by item.getSaleId(). */
-    SaleItem saveItem(SaleItem item);
+    Sale_item saveItem(Sale_item item);
 
     Optional<Sale> findById(int saleId);
 
-    List<SaleItem> findItems(int saleId);
+    List<Sale_item> findItems(int saleId);
 
     void updateStatus(int saleId, Sale.Status status);
 }

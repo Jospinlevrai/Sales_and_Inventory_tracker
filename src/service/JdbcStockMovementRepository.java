@@ -1,20 +1,22 @@
 package service;
 
 import model.Stock_movement;
+import service.DBConnection;
+import service.StockMovementRepository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Types;
 
 public class JdbcStockMovementRepository implements StockMovementRepository {
-    private final Database database;
+    private final DBConnection database;
 
-    public JdbcStockMovementRepository(Database database) {
+    public JdbcStockMovementRepository(DBConnection database) {
         this.database = database;
     }
 
     @Override
-    public StockMovement save(StockMovement movement) {
+    public Stock_movement save(Stock_movement movement) {
         return database.withConnection(connection -> {
             try (PreparedStatement statement = connection.prepareStatement(
                     "INSERT INTO Stock_Movements(product_id, user_id, movement_type, quantity_change, sale_id, purchase_id, note, created_at) "
