@@ -1,9 +1,6 @@
 package service;
 
 import model.Supplier;
-import service.DBConnection;
-import service.SupplierCatalogRepository;
-import service.SupplierRepository;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -1,9 +1,6 @@
 package service;
 
 import model.Product;
-import service.DBConnection;
-import service.ProductCatalogRepository;
-import service.ProductRepository;
 
 import java.math.BigDecimal;
 import java.sql.PreparedStatement;

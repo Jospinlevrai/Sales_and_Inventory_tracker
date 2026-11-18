@@ -9,8 +9,10 @@ import dto.ProductSales;
 import dto.RecentSale;
 import model.Sale;
 import model.Stock_movement;
+
 import service.DBConnection;
-import service.ReportRepository;
+
+
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

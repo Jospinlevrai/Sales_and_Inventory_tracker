@@ -7,6 +7,7 @@ import model.Role;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import repository.CategoryRepository;
 
 public class ProductServiceImpl implements ProductService {
     private static final BigDecimal MAX_MONEY = new BigDecimal("9999999999.99");
