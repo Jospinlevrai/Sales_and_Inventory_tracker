@@ -31,8 +31,11 @@ public class SaleServiceImpl implements SaleService {
     @Override
     public Sale completeSale(SaleRequest request) {
         validate(request);
-        BigDecimal discount = orZero(request.getDiscount());
-        BigDecimal taxRate = orZero(request.getTaxRate());
+        BigDecimal discount = Text.money(orZero(request.getDiscount()), "Discount");
+        BigDecimal taxRate = Text.money(orZero(request.getTaxRate()), "Tax rate");
+        if (taxRate.compareTo(HUNDRED) > 0) {
+            throw new BusinessRuleException("The tax rate must be between 0 and 100");
+        }
         Map<Integer, Integer> quantities = mergeLines(request.getLines());
 
         return transactions.execute(() -> {
@@ -173,8 +176,11 @@ public class SaleServiceImpl implements SaleService {
             throw new BusinessRuleException("Add at least one item to the sale");
         }
         for (SaleRequest.Line line : request.getLines()) {
-            if (line.getQuantity() <= 0) {
-                throw new BusinessRuleException("Each quantity must be at least 1");
+            if (line.getProductId() <= 0) {
+                throw new BusinessRuleException("Choose a valid product");
+            }
+            if (line.getQuantity() < 1 || line.getQuantity() > 1_000_000) {
+                throw new BusinessRuleException("Each sale quantity must be between 1 and 1000000");
             }
         }
         if (orZero(request.getDiscount()).signum() < 0) {
