@@ -79,12 +79,84 @@ public class SaleServiceImpl implements SaleService {
             if (sale.getStatus() == Sale.Status.VOIDED) {
                 throw new BusinessRuleException("Sale " + sale.getReceiptNo() + " is already voided");
             }
+            if (sale.getStatus() == Sale.Status.REFUNDED) {
+                throw new BusinessRuleException("Sale " + sale.getReceiptNo() + " is already refunded");
+            }
+            for (Sale_item item : sales.findItems(saleId)) {
+                if (sales.refundedQuantity(saleId, item.getProductId()) > 0) {
+                    throw new BusinessRuleException("A sale with refunds cannot be voided");
+                }
+            }
             sales.updateStatus(saleId, Sale.Status.VOIDED);
             for (Sale_item item : sales.findItems(saleId)) {
                 ledger.record(item.getProductId(), userId, Stock_movement.MovementType.SALE_VOID,
                         item.getQuantity(), saleId, null, reason.trim());
             }
         });
+    }
+
+    @Override
+    public void refundSale(int saleId, int userId, Map<Integer, Integer> quantities, String reason) {
+        if (userId <= 0) {
+            throw new BusinessRuleException("The user refunding the sale is missing");
+        }
+        if (reason == null || reason.trim().isEmpty()) {
+            throw new BusinessRuleException("Give a reason for the refund");
+        }
+        if (quantities == null || quantities.isEmpty()) {
+            throw new BusinessRuleException("Choose at least one item to refund");
+        }
+
+        transactions.run(() -> {
+            Sale sale = sales.findById(saleId)
+                    .orElseThrow(() -> new BusinessRuleException("Sale " + saleId + " does not exist"));
+            if (sale.getStatus() == Sale.Status.VOIDED) {
+                throw new BusinessRuleException("A voided sale cannot be refunded");
+            }
+
+            Map<Integer, Integer> original = new HashMap<>();
+            for (Sale_item item : sales.findItems(saleId)) {
+                original.merge(item.getProductId(), item.getQuantity(), Integer::sum);
+            }
+
+            boolean fullyRefunded = true;
+            for (Map.Entry<Integer, Integer> entry : quantities.entrySet()) {
+                int productId = entry.getKey();
+                int quantity = entry.getValue();
+                if (!original.containsKey(productId)) {
+                    throw new BusinessRuleException("Product " + productId + " is not on the sale");
+                }
+                if (quantity <= 0) {
+                    throw new BusinessRuleException("Refund quantities must be at least 1");
+                }
+
+                int alreadyRefunded = sales.refundedQuantity(saleId, productId);
+                int maximum = original.get(productId) - alreadyRefunded;
+                if (quantity > maximum) {
+                    throw new BusinessRuleException("Only " + maximum + " units of product " + productId
+                            + " can be refunded");
+                }
+
+                ledger.record(productId, userId, Stock_movement.MovementType.SALE_REFUND,
+                        quantity, saleId, null, reason.trim());
+            }
+
+            for (Map.Entry<Integer, Integer> entry : original.entrySet()) {
+                int refunded = sales.refundedQuantity(saleId, entry.getKey());
+                if (refunded < entry.getValue()) {
+                    fullyRefunded = false;
+                    break;
+                }
+            }
+            if (fullyRefunded) {
+                sales.updateStatus(saleId, Sale.Status.REFUNDED);
+            }
+        });
+    }
+
+    @Override
+    public java.util.List<Sale_item> getSaleItems(int saleId) {
+        return sales.findItems(saleId);
     }
 
     private void validate(SaleRequest request) {

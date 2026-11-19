@@ -104,6 +104,22 @@ public class JdbcSaleRepository implements SaleRepository {
         });
     }
 
+    @Override
+    public int refundedQuantity(int saleId, int productId) {
+        return database.withConnection(connection -> {
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COALESCE(SUM(quantity_change), 0) FROM Stock_Movements "
+                            + "WHERE sale_id = ? AND product_id = ? AND movement_type = 'SALE_REFUND'")) {
+                statement.setInt(1, saleId);
+                statement.setInt(2, productId);
+                try (ResultSet rows = statement.executeQuery()) {
+                    rows.next();
+                    return rows.getInt(1);
+                }
+            }
+        });
+    }
+
     private static Sale mapSale(ResultSet rows) throws SQLException {
         return new Sale(rows.getInt("sale_id"), rows.getString("receipt_no"), rows.getInt("user_id"),
                 rows.getObject("sale_date", LocalDateTime.class),
