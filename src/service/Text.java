@@ -55,6 +55,16 @@ final class Text {
         if (!PHONE.matcher(text).matches()) {
             throw new BusinessRuleException("The phone number is not valid");
         }
+
+        int digitCount = 0;
+        for (int i = 0; i < text.length(); i++) {
+            if (Character.isDigit(text.charAt(i))) {
+                digitCount++;
+            }
+        }
+        if (digitCount < 7 || digitCount > 15) {
+            throw new BusinessRuleException("The phone number must contain between 7 and 15 digits");
+        }
         return text;
     }
 }
