@@ -96,6 +96,7 @@ public class ProductServiceImpl implements ProductService {
         if (input.getReorderLevel() < 0) {
             throw new BusinessRuleException("The reorder level cannot be negative");
         }
+        Text.nonNegativeInteger(input.getReorderLevel(), 1_000_000, "Reorder level");
         if (!categories.findById(input.getCategoryId()).isPresent()) {
             throw new BusinessRuleException("Choose a category that exists");
         }

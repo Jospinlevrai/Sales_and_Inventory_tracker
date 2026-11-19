@@ -26,6 +26,12 @@ public class StockServiceImpl implements StockService {
         if (reason == null || reason.trim().isEmpty()) {
             throw new BusinessRuleException("Give a reason for the adjustment");
         }
+        if (userId <= 0) {
+            throw new BusinessRuleException("The user adjusting stock is missing");
+        }
+        if (quantityChange < -1_000_000 || quantityChange > 1_000_000) {
+            throw new BusinessRuleException("The stock adjustment must be between -1000000 and 1000000");
+        }
         transactions.run(() -> {
             products.findById(productId)
                     .orElseThrow(() -> new BusinessRuleException("Product " + productId + " does not exist"));
