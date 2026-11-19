@@ -51,6 +51,22 @@ public class JdbcProductRepository implements ProductRepository, ProductCatalogR
     }
 
     @Override
+    public List<Product> findLowStock() {
+        return database.withConnection(connection -> {
+            List<Product> products = new ArrayList<>();
+            try (PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM Products WHERE is_active AND quantity_in_stock <= reorder_level "
+                            + "ORDER BY (quantity_in_stock = 0) DESC, quantity_in_stock ASC, product_name ASC");
+                 ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    products.add(map(rows));
+                }
+            }
+            return products;
+        });
+    }
+
+    @Override
     public boolean changeStock(int productId, int delta) {
         return database.withConnection(connection -> {
             try (PreparedStatement statement = connection.prepareStatement(
