@@ -2,8 +2,11 @@ package dto;
 
 import java.math.BigDecimal;
 import model.Sale;
+import java.io.Serializable;
 
-public class PaymentTotal {
+public class PaymentTotal  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final Sale.PaymentMethod paymentMethod;
     private final int transactions;
     private final BigDecimal amount;

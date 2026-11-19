@@ -2,8 +2,11 @@ package dto;
 
 import java.time.LocalDateTime;
 import model.Stock_movement;
+import java.io.Serializable;
 
-public class MovementEntry {
+public class MovementEntry  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final long movementId;
     private final LocalDateTime createdAt;
     private final String productName;
