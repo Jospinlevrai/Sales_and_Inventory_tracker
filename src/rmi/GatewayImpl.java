@@ -7,6 +7,7 @@ import exception.BusinessRuleException;
 import service.ActingUser;
 import service.AppServices;
 import service.AuthService;
+import service.BackupService;
 import service.CategoryService;
 import service.ProductService;
 import service.PurchaseService;
@@ -78,6 +79,7 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
         register(PurchaseService.class, services.purchases());
         register(StockService.class, services.stock());
         register(ReportService.class, services.reports());
+        register(BackupService.class, services.backups());
     }
 
     private void register(Class<?> type, Object service) {

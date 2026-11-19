@@ -11,6 +11,7 @@ public class AppServices {
     private final PurchaseService purchases;
     private final StockService stock;
     private final ReportService reports;
+    private final BackupService backups;
 
     public AppServices(DBConnection database) {
         TransactionManager transactions = new JdbcTransactionManager(database);
@@ -35,6 +36,7 @@ public class AppServices {
                 movementRepository, transactions);
         this.stock = new StockServiceImpl(productRepository, movementRepository, transactions);
         this.reports = new ReportServiceImpl(reportRepository, userRepository, roleRepository);
+        this.backups = new BackupServiceImpl(database, userRepository, roleRepository);
     }
 
     public AuthService auth() { return auth; }
@@ -46,4 +48,5 @@ public class AppServices {
     public PurchaseService purchases() { return purchases; }
     public StockService stock() { return stock; }
     public ReportService reports() { return reports; }
+    public BackupService backups() { return backups; }
 }

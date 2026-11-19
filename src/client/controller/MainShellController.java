@@ -16,9 +16,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import model.Role;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +34,9 @@ public class MainShellController {
     @FXML private Button navPurchasesBtn;
     @FXML private Button navUsersBtn;
     @FXML private StackPane contentArea;
+
+    @FXML private Button backupButton;
+    @FXML private Button exportButton;
 
     private List<Button> allNavButtons;
 
@@ -54,6 +60,8 @@ public class MainShellController {
         setNavVisible(navInventoryBtn, isManagerOrAdmin);
         setNavVisible(navPurchasesBtn, isManagerOrAdmin);
         setNavVisible(navUsersBtn, isAdmin);
+        setNavVisible(backupButton, isAdmin);
+        setNavVisible(exportButton, isAdmin);
 
         if (isManagerOrAdmin) {
             showDashboard();
@@ -152,5 +160,84 @@ public class MainShellController {
                 btn.setStyle("-fx-background-color: transparent; -fx-text-fill: #cbd5e1; -fx-font-size: 13px; -fx-padding: 10 12;");
             }
         }
+    }
+
+    @FXML
+    private void handleDatabaseBackup() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save Database Backup");
+        chooser.setInitialFileName("inventory-backup.dump");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PostgreSQL Backup", "*.dump"));
+        File file = chooser.showSaveDialog(contentArea.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+
+        AsyncTask.run(
+                () -> SessionContext.backups().createDatabaseBackup(SessionContext.getUserId()),
+                bytes -> {
+                    try {
+                        Files.write(file.toPath(), bytes);
+                        UiAlerts.info("Backup Created", "Database backup saved to " + file.getAbsolutePath());
+                    } catch (IOException e) {
+                        UiAlerts.error("Backup Failed", "Could not save the backup: " + e.getMessage());
+                    }
+                }
+        );
+    }
+
+    @FXML
+    private void handleDataExport() {
+        List<String> tables;
+        try {
+            tables = SessionContext.backups().exportableTables(SessionContext.getUserId());
+        } catch (RuntimeException e) {
+            UiAlerts.handleException(e);
+            return;
+        }
+
+        javafx.scene.control.ComboBox<String> tableBox = new javafx.scene.control.ComboBox<>();
+        tableBox.getItems().setAll(tables);
+        if (!tables.isEmpty()) {
+            tableBox.setValue(tables.get(0));
+        }
+
+        Dialog<String> dialog = new Dialog<>();
+        dialog.setTitle("Export Data");
+        dialog.setHeaderText("Choose a database table to export as CSV");
+        ButtonType exportType = new ButtonType("Export", ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(exportType, ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 20, 10, 20));
+        grid.add(new Label("Table:"), 0, 0);
+        grid.add(tableBox, 1, 0);
+        dialog.getDialogPane().setContent(grid);
+        dialog.setResultConverter(button -> button == exportType ? tableBox.getValue() : null);
+
+        dialog.showAndWait().ifPresent(tableName -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle("Save CSV Export");
+            chooser.setInitialFileName(tableName + ".csv");
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+            File file = chooser.showSaveDialog(contentArea.getScene().getWindow());
+            if (file == null) {
+                return;
+            }
+
+            AsyncTask.run(
+                    () -> SessionContext.backups().exportTableCsv(SessionContext.getUserId(), tableName),
+                    bytes -> {
+                        try {
+                            Files.write(file.toPath(), bytes);
+                            UiAlerts.info("Export Created", "Table export saved to " + file.getAbsolutePath());
+                        } catch (IOException e) {
+                            UiAlerts.error("Export Failed", "Could not save the export: " + e.getMessage());
+                        }
+                    }
+            );
+        });
     }
 }
