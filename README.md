@@ -1,112 +1,285 @@
 # Sales and Inventory Tracker
 
-![Java](https://img.shields.io/badge/Java-17%2B-orange)
-![JavaFX](https://img.shields.io/badge/JavaFX-Desktop-blue)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-336791)
-![Java RMI](https://img.shields.io/badge/Java-RMI-yellow)
+<div align="center">
 
-A distributed sales, purchasing, and inventory management desktop application built with JavaFX, Java RMI, and PostgreSQL. The client provides role-specific workflows, while a central RMI server owns authentication, authorization, database access, business rules, and audit logging.
+![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?logo=openjdk&logoColor=white)
+![JavaFX](https://img.shields.io/badge/JavaFX-17%2B-3776AB)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13%2B-336791?logo=postgresql&logoColor=white)
+![Java RMI](https://img.shields.io/badge/Java-RMI-yellow)
+![Build](https://img.shields.io/badge/Build-Apache%20Ant-A81C7D)
+![License](https://img.shields.io/badge/License-Not%20Specified-lightgrey)
+
+**A distributed retail operations system for inventory control, purchasing, point-of-sale transactions, reporting, and accountability.**
+
+</div>
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Main Features](#main-features)
+- [Project Overview](#project-overview)
+- [Problem Statement](#problem-statement)
+- [Core Features](#core-features)
 - [Technology Stack](#technology-stack)
-- [Architecture](#architecture)
+- [System Architecture](#system-architecture)
+- [Database Design](#database-design)
+- [Requirements Analysis](#requirements-analysis)
 - [Project Structure](#project-structure)
 - [Prerequisites](#prerequisites)
-- [Database Setup](#database-setup)
-- [Server Configuration](#server-configuration)
-- [Run the Application](#run-the-application)
+- [Installation and Database Setup](#installation-and-database-setup)
+- [Starting the Application](#starting-the-application)
+- [Using the System](#using-the-system)
 - [Roles and Permissions](#roles-and-permissions)
-- [Security](#security)
-- [Backup and Export](#backup-and-export)
+- [Security and Audit Controls](#security-and-audit-controls)
+- [Backup and CSV Export](#backup-and-csv-export)
+- [Testing and Quality Assurance](#testing-and-quality-assurance)
+- [Work Plan](#work-plan)
+- [Team](#team)
+- [Git and Collaboration Workflow](#git-and-collaboration-workflow)
 - [Troubleshooting](#troubleshooting)
-- [Git and Team Workflow](#git-and-team-workflow)
-- [Contributors](#contributors)
+- [Known Limitations](#known-limitations)
 
-## Overview
+## Project Overview
 
-The system helps a small retail or inventory operation manage products, categories, suppliers, purchases, point-of-sale transactions, stock movements, users, reports, and audit records.
+Sales and Inventory Tracker is a Java desktop application for a small retail or wholesale operation. It separates the JavaFX client from the server-side business and database layers through Java RMI.
 
-### Problems Addressed
+The system provides one controlled workflow for:
 
-- Manual stock counts and unreliable inventory balances
-- Repeated or incorrect supplier and product records
-- Weak tracking of sales, purchases, and stock adjustments
-- Limited visibility into stock value and reorder requirements
-- Lack of accountability for administrative and transactional activity
+- Recording supplier purchases
+- Receiving stock
+- Managing products and categories
+- Completing and refunding sales
+- Maintaining a stock movement ledger
+- Producing sales and inventory reports
+- Managing users and role-based access
+- Recording operational audit events
+- Backing up and exporting system data
 
-## Main Features
+## Problem Statement
 
-- Secure login and first-administrator setup
-- Role-based access for administrator, manager, and cashier users
-- Product, category, and supplier management
-- Point-of-sale transactions with automatic stock updates
-- Supplier purchase entry and purchase history
-- Stock adjustments and stock movement ledger
-- Dashboard with sales, profit, stock value, and reorder indicators
-- Daily sales and cashier performance reports
-- Database backup creation and table-level CSV export
-- Durable audit records for significant operations
-- Password changes and administrator-controlled password resets
-- Protection against inactive accounts and unsafe last-administrator removal
+Retail operations commonly rely on manual records or disconnected spreadsheets. This causes inaccurate stock counts, duplicated product data, weak purchase traceability, delayed reorder decisions, and limited accountability.
+
+This application provides a centralized, role-controlled alternative. Every sale and purchase is processed through server-side services, while stock levels and movement records are updated as part of transactional database operations.
+
+## Core Features
+
+### Inventory
+
+- Create, update, search, deactivate, and list products
+- Unique SKU and barcode validation
+- Category and supplier assignment
+- Reorder-level and out-of-stock identification
+- Low-stock inventory views
+- Stock adjustment and movement history
+
+### Sales and POS
+
+- Search products for point-of-sale transactions
+- Complete sales with quantities, prices, discounts, tax, and payment method
+- Automatic stock deduction
+- Sale voiding with stock restoration
+- Partial or full sale refunds with recorded stock returns
+- Recent-sale and cashier reporting
+
+### Purchasing
+
+- Record supplier purchases
+- Capture invoice number, purchase date, notes, and line items
+- Update stock from accepted purchases
+- Use supplier and product catalog information
+
+### Reporting
+
+- Dashboard KPIs
+- Completed-sales revenue
+- Gross profit
+- Inventory stock value
+- Reorder and out-of-stock counts
+- Daily sales trends
+- Top-selling products
+- Cashier summaries
+- CSV dashboard and table exports
+
+### Administration
+
+- First-administrator setup
+- User creation, editing, activation, and deactivation
+- Password changes and administrator password resets
+- Role assignment
+- PostgreSQL database backups
+- Audit log review
 
 ## Technology Stack
 
-| Layer | Technology |
+| Area | Technology |
 |---|---|
-| Desktop UI | JavaFX and FXML |
-| Application language | Java |
-| Service communication | Java RMI |
-| Database | PostgreSQL |
-| JDBC | PostgreSQL JDBC driver |
-| Build/development | Apache Ant / NetBeans project structure |
-| Security | PBKDF2-HMAC-SHA256 password hashing |
-| Reporting | Java-backed database reports and CSV exports |
+| Desktop interface | JavaFX 17+, FXML, CSS |
+| Programming language | Java 17+ |
+| Distributed communication | Java RMI |
+| Database | PostgreSQL 13+ |
+| Database access | JDBC with PostgreSQL JDBC driver |
+| Build system | Apache Ant / NetBeans project structure |
+| Password security | PBKDF2-HMAC-SHA256, 600,000 iterations |
+| Reports and exports | SQL aggregation and CSV output |
+| Backup | PostgreSQL `pg_dump` |
 
-## Architecture
+## System Architecture
 
 ```text
-JavaFX Client
-  -> RemoteServices
-  -> RemoteGateway interface
-  -> RMI Registry
-  -> GatewayImpl
-  -> Application and domain services
-  -> JDBC repositories
-  -> PostgreSQL
++--------------------------+
+| JavaFX Desktop Client    |
+| FXML views and controllers|
++-------------+------------+
+              |
+              | Java RMI
+              v
++--------------------------+
+| Remote Gateway           |
+| Authentication, dispatch |
++-------------+------------+
+              |
+              v
++--------------------------+
+| Application Services     |
+| Validation and access rules|
++-------------+------------+
+              |
+              v
++--------------------------+
+| JDBC Repositories        |
+| Transaction management   |
++-------------+------------+
+              |
+              v
++--------------------------+
+| PostgreSQL Database      |
++--------------------------+
 ```
 
-The client does not contain direct database access or business-rule implementations. The RMI gateway dispatches only registered service methods, adds the authenticated acting user to authorized operations, and rejects unauthenticated calls.
+The RMI client uses dynamic service proxies so the client calls service interfaces without holding database code or repository implementations. The gateway:
+
+1. Requires a valid session token for protected operations.
+2. Resolves the authenticated actor from the server session.
+3. Rejects unknown or mismatched operations.
+4. Injects the acting-user ID into protected methods.
+5. Applies server-side role checks.
+6. Records audit events for significant mutations.
 
 Core packages:
 
-- `client` — JavaFX entry point, session state, FXML controllers, and UI helpers
-- `rmi` — RMI server, gateway, registry client, and remote dispatch
-- `service` — business rules, repositories, database connection, backup, and reporting
-- `dto` — serializable request and response objects
-- `model` — domain entities
-- `exception` — application and infrastructure exception types
+| Package | Responsibility |
+|---|---|
+| `client` | JavaFX application, sessions, asynchronous tasks, alerts |
+| `client.controller` | UI event handling and navigation |
+| `client.fxml` | Login, dashboard, POS, inventory, purchase, user, and audit views |
+| `rmi` | RMI registry, gateway, and remote service proxy |
+| `service` | Business rules, authorization, transactions, repositories |
+| `dto` | RMI-compatible request and response objects |
+| `model` | Domain entities |
+| `exception` | Business and infrastructure exception types |
+
+## Database Design
+
+The application uses PostgreSQL and JDBC repositories.
+
+### Main Entities
+
+| Entity | Purpose |
+|---|---|
+| Roles | Available system roles |
+| Users | Account, profile, password hash, role, and active state |
+| Categories | Product classification |
+| Suppliers | Supplier contact and status information |
+| Products | SKU, barcode, pricing, unit, stock, and reorder settings |
+| Purchases | Supplier invoice headers |
+| Purchase_Items | Purchased product quantities and unit costs |
+| Sales | POS transaction headers |
+| Sale_Items | Sold product quantities, prices, and costs |
+| Stock_Movements | Stock additions, deductions, returns, and adjustments |
+| Audit_Log | User operations and system activity |
+
+### Key Relationships
+
+```text
+Roles 1 ───── * Users
+
+Categories 1 ───── * Products
+Suppliers 1 ───── * Products
+Suppliers 1 ───── * Purchases
+
+Users 1 ───── * Sales
+Users 1 ───── * Purchases
+Users 1 ───── * Stock_Movements
+
+Sales 1 ───── * Sale_Items
+Products 1 ─── * Sale_Items
+
+Purchases 1 ─── * Purchase_Items
+Products 1 ───── * Purchase_Items
+
+Products 1 ───── * Stock_Movements
+```
+
+> The repository does not currently include a standalone SQL migration or schema dump. Create the database tables and relationships before starting the server. The audit repository creates `Audit_Log` automatically, while other tables must already exist.
+
+## Requirements Analysis
+
+### Functional Requirements
+
+| ID | Requirement | Priority | Status |
+|---|---|---|---|
+| FR-01 | Allow the first administrator to be created securely | Must | Implemented |
+| FR-02 | Authenticate users and assign role-specific interfaces | Must | Implemented |
+| FR-03 | Create, edit, activate, and deactivate users | Must | Implemented |
+| FR-04 | Manage categories and suppliers | Must | Implemented |
+| FR-05 | Manage products and prevent duplicate SKU/barcode values | Must | Implemented |
+| FR-06 | Search products and complete sales | Must | Implemented |
+| FR-07 | Prevent sales when requested stock is unavailable | Must | Implemented |
+| FR-08 | Record purchases and increase stock | Must | Implemented |
+| FR-09 | Maintain a stock movement ledger | Must | Implemented |
+| FR-10 | Void sales and restore returned stock | Must | Implemented |
+| FR-11 | Refund selected quantities and preserve sale history | Should | Implemented |
+| FR-12 | Display dashboard and report metrics | Must | Implemented |
+| FR-13 | Export supported tables as CSV | Should | Implemented |
+| FR-14 | Create PostgreSQL custom-format backups | Should | Implemented |
+| FR-15 | Display and retain audit events | Should | Implemented |
+| FR-16 | Prevent removal or demotion of the last active administrator | Must | Implemented |
+
+### Non-Functional Requirements
+
+| Category | Requirement |
+|---|---|
+| Usability | Role-specific navigation should expose only permitted functions |
+| Security | Passwords must be salted and hashed; passwords must not be stored in plaintext |
+| Security | Protected RMI operations must require an authenticated server session |
+| Integrity | Sales, purchases, refunds, and stock updates must be transaction-controlled |
+| Reliability | Database and RMI failures must be surfaced as application exceptions |
+| Portability | PostgreSQL settings must be externalized in `db.properties` |
+| Maintainability | UI, DTO, model, service, repository, and RMI concerns must remain separated |
+| Auditability | Significant mutations must record actor and operation details |
 
 ## Project Structure
 
 ```text
 Sales_and_Inventory_tracker/
-|-- src/
-|   |-- client/
-|   |   |-- controller/
-|   |   |-- fxml/
-|   |   |-- ClientApp.java
-|   |   `-- SessionContext.java
-|   |-- dto/
-|   |-- exception/
-|   |-- model/
-|   |-- rmi/
-|   `-- service/
-|-- build.xml
-|-- manifest.mf
-`-- README.md
+├── build.xml
+├── manifest.mf
+├── README.md
+└── src/
+    ├── client/
+    │   ├── controller/
+    │   ├── fxml/
+    │   ├── AsyncTask.java
+    │   ├── ClientApp.java
+    │   ├── SessionContext.java
+    │   └── UiAlerts.java
+    ├── dto/
+    ├── exception/
+    ├── model/
+    ├── rmi/
+    │   ├── GatewayImpl.java
+    │   ├── RemoteGateway.java
+    │   ├── RemoteServices.java
+    │   └── ServerMain.java
+    └── service/
 ```
 
 ## Prerequisites
@@ -114,31 +287,29 @@ Sales_and_Inventory_tracker/
 - JDK 17 or newer
 - JavaFX 17 or newer
 - PostgreSQL 13 or newer
-- PostgreSQL JDBC driver (`postgresql-*.jar`)
-- Apache Ant, or NetBeans with Java and JavaFX support
-- Network access to the RMI server port, `1099` by default
+- PostgreSQL JDBC driver JAR
+- Apache Ant or NetBeans
+- PostgreSQL client tools, including `pg_dump`, for backup support
+- TCP access to the RMI registry port and server host
 
-To run across multiple computers, allow TCP traffic for the RMI registry port and configure `java.rmi.server.hostname` to the server computer's address.
+## Installation and Database Setup
 
-## Database Setup
+### 1. Clone the Repository
 
-1. Create a PostgreSQL database named `Inventory_tracker`.
-2. Create a database user that can connect to the database.
-3. Apply the project database schema, including the tables and relationships used by the repositories:
+```bash
+git clone https://github.com/Jospinlevrai/Sales_and_Inventory_tracker.git
+cd Sales_and_Inventory_tracker
+```
 
-   - `Roles`
-   - `Users`
-   - `Categories`
-   - `Suppliers`
-   - `Products`
-   - `Sales`
-   - `Sale_Items`
-   - `Purchases`
-   - `Purchase_Items`
-   - `Stock_Movements`
-   - `Audit_Log`
+### 2. Create the PostgreSQL Database
 
-> The repository does not currently include a SQL migration or schema creation script. Import or create the schema separately before starting the server. `Audit_Log` is created automatically when the audit repository is initialized, but the remaining tables must exist.
+```sql
+CREATE DATABASE "Inventory_tracker";
+```
+
+Create or import all application tables listed in [Database Design](#database-design). Ensure primary keys, foreign keys, indexes, and not-null constraints match the SQL used in `src/service/Jdbc*Repository.java`.
+
+### 3. Create Database Configuration
 
 Create `db.properties` in the repository root:
 
@@ -148,167 +319,246 @@ db.user=YOUR_POSTGRES_USERNAME
 db.password=YOUR_POSTGRES_PASSWORD
 ```
 
-Keep database credentials out of source control. In PostgreSQL, password-escaped or special-character values must be provided exactly as required by your driver and configuration.
+Add `db.properties` to `.gitignore` and never commit real credentials. The server reads this file as `db.properties` by default.
 
-## Server Configuration
+### 4. Configure Libraries
 
-The server is started with a properties file and a registry port:
+In NetBeans or Apache Ant:
 
-```text
+1. Add the JavaFX SDK to the compile and runtime module/classpath.
+2. Add `postgresql-*.jar` to the compile and runtime classpath.
+3. Add JavaFX runtime options if JavaFX is not available on the system.
+4. Confirm `build.xml` resolves the project build.
+
+## Starting the Application
+
+The RMI server and JavaFX client are separate processes.
+
+### Start the Server
+
+From the repository root:
+
+```bash
 java rmi.ServerMain db.properties
 ```
 
-Default RMI registry port: `1099`
+The default RMI registry port is `1099`.
 
-Start on a custom port:
+Start on a different registry port:
 
-```text
+```bash
 java -Dserver.port=1200 rmi.ServerMain db.properties
 ```
 
 For remote clients:
 
-```text
+```bash
 java -Djava.rmi.server.hostname=SERVER_IP rmi.ServerMain db.properties
 ```
 
-The server:
+Successful startup reports that PostgreSQL is reachable and that the RMI server is ready.
 
-- Verifies that PostgreSQL is reachable
-- Loads database settings
-- Creates the service and repository graph
-- Starts the RMI registry
-- Registers the remote gateway as `InventoryTracker`
+### Start the Client
 
-## Run the Application
+In NetBeans, run `client.ClientApp`.
 
-### In NetBeans
-
-1. Open the repository as a project.
-2. Add the JavaFX SDK to the project libraries or module-path configuration.
-3. Add the PostgreSQL JDBC JAR.
-4. Configure the server main class as `rmi.ServerMain`.
-5. Run the server and confirm that it reports that the database is reachable.
-6. Configure and run the client main class as `client.ClientApp`.
-
-### First Sign-In
-
-When no users exist, use the **Set up administrator** link or dialog on the login screen. The first setup action creates the administrator account and the required roles.
-
-Passwords must:
-
-- Contain at least eight characters
-- Not be identical to or the username
-- Be changed by the user or administrator through the application's account tools
-
-The login screen asks for:
+On the login screen, enter:
 
 - Server host
 - RMI port
 - Username
 - Password
 
-The default host and port are `localhost` and `1099`.
+The defaults are `localhost` and `1099`.
+
+### First-Time Setup
+
+If no users exist:
+
+1. Open the first-administrator setup option on the login screen.
+2. Enter a username, full name, and password.
+3. Sign in with the created account.
+
+The first-administrator setup is unavailable after the first user is created.
+
+## Using the System
+
+1. Start PostgreSQL.
+2. Start `rmi.ServerMain`.
+3. Start `client.ClientApp`.
+4. Connect to the RMI host and port.
+5. Sign in with an active account.
+6. Use the role-specific navigation.
+
+Password rules include:
+
+- At least eight characters
+- Not identical to the username
+- A username or password case-insensitive comparison check
+- Password changes must provide a new, different password
 
 ## Roles and Permissions
 
-| Role | Access |
+| Role | Typical Access |
 |---|---|
-| Administrator | Full access, including users, inventory, purchases, reports, audit records, backup, and CSV export |
-| Manager | Dashboard, point of sale, inventory, purchases, and audit records |
-| Cashier | Point of sale and account password management |
+| Administrator | Full system access, user management, backups, CSV export, and audit access |
+| Manager | Dashboard, POS, inventory, purchases, reports, and audit access |
+| Cashier | POS and own-account password changes |
 
-Authorization is also checked on the server. UI visibility alone is not treated as a security boundary.
+Authorization is enforced both by UI visibility and by server-side `AccessControl` checks. Hiding a button does not grant permission.
 
-## Security
+## Security and Audit Controls
 
-- Passwords are stored only as salted PBKDF2-HMAC-SHA256 hashes
-- Password derivation uses 600,000 iterations
-- Login responses never expose password hashes
-- RMI operations are protected by session tokens
-- The gateway adds the authenticated user ID to actions rather than trusting a client-supplied actor
-- The first-user setup is permitted only when no users exist
-- Accounts can be deactivated, but the last active administrator cannot be removed or demoted
-- Business exceptions are returned separately from unexpected server failures
+- Passwords are converted into salted PBKDF2-HMAC-SHA256 hashes.
+- Password hashes are not returned in `UserInfo`.
+- Login uses a constant timing path for unknown usernames.
+- RMI calls use generated session tokens.
+- Acting-user IDs are supplied or injected by the gateway, not trusted from ordinary client input.
+- Protected operations require active users and suitable roles.
+- The last active administrator is protected from deactivation or demotion.
+- Significant mutations are written to `Audit_Log`.
+- Database credentials are externalized and must remain outside source control.
 
-## Backup and Export
+## Backup and CSV Export
 
-Administrators can create a PostgreSQL custom-format backup from the application. The server uses `pg_dump --format=custom --no-password`, writes it to a temporary file, and returns the file bytes to the client for saving.
+Only administrators can create backups or export tables.
 
-Administrators can also export supported database tables as CSV files. CSV output is written in memory and saved through the JavaFX file chooser.
+Backups use PostgreSQL custom format:
 
-For production use:
+```text
+pg_dump --host=<host> --port=<port> --username=<user> --format=custom --no-password <database>
+```
 
-- Ensure `pg_dump` is installed and available on the server's `PATH`
-- Keep PostgreSQL backups outside the application directory
-- Encrypt or restrict access to backup files
-- Test restore procedures regularly
+The password is supplied through `PGPASSWORD`. The backup bytes are sent to the JavaFX client and saved through a file chooser.
+
+Supported exports include products, categories, suppliers, users, sales, sale items, purchases, purchase items, and stock movements.
+
+## Testing and Quality Assurance
+
+Use the following minimum test matrix for releases:
+
+| Test Area | Verification |
+|---|---|
+| Database startup | Server reports PostgreSQL reachable |
+| First administrator | Setup works only when no users exist |
+| Authentication | Valid login succeeds; wrong credentials fail |
+| Roles | Cashier cannot open administrator-only operations |
+| POS | Stock decreases only after completed sale |
+| Insufficient stock | Sale is rejected and stock remains unchanged |
+| Purchase | Stock increases and movement is recorded |
+| Void/refund | Returned stock is restored once |
+| Validation | Duplicate SKU/barcode and invalid input are rejected |
+| Password | Old password works; changed password works; reset works |
+| Audit | Significant operations create audit entries |
+| Backup | `pg_dump` produces a restorable custom-format file |
+| Network | Client can connect to remote server and RMI port |
+
+No automated test suite is currently included in the repository. Release testing should be recorded manually or automated tests should be added under a `test/` directory.
+
+## Work Plan
+
+| Phase | Activities | Status |
+|---|---|---|
+| Analysis | Problem, actors, requirements, and constraints | Completed |
+| System design | Architecture, entity relationships, UI flows, RMI services | Completed |
+| Database implementation | PostgreSQL repositories and transactions | Completed |
+| Core modules | Authentication, users, inventory, suppliers, purchases | Completed |
+| POS module | Sales, stock updates, voids, refunds | Completed |
+| Reporting | Dashboard, daily sales, top products, cashier reports | Completed |
+| Administration | Audit logs, backups, CSV exports | Completed |
+| Validation | Input rules and server-side authorization | Completed |
+| Integration testing | Client/server/database end-to-end testing | In progress |
+| Final review | Deployment notes, documentation, and presentation | In progress |
+
+## Team
+
+| Team Member |
+|---|
+| Claire Maina |
+| Jospin Mukanire |
+| Glovich |
+| ampiremurhimanya |
+| Sandie |
+| Laureen774 |
+
+Every team member should collaborate through feature branches and pull requests. Contributions should be traceable to commits and GitHub activity.
+
+## Git and Collaboration Workflow
+
+```bash
+git switch main
+git pull origin main
+git switch -c feature/short-description
+```
+
+Commit work clearly:
+
+```bash
+git add .
+git commit -m "feat: add low-stock inventory report"
+git push origin feature/short-description
+```
+
+Before merging a pull request:
+
+- Pull the latest `main`.
+- Resolve conflicts locally.
+- Compile and run both server and client.
+- Verify database and role behavior.
+- Review the diff for credentials or generated files.
+- Request peer review.
+- Merge only after validation.
+
+Do not commit:
+
+- Database passwords
+- `db.properties`
+- PostgreSQL backups
+- CSV exports
+- IDE build products
 
 ## Troubleshooting
 
-### Database connection failure
+### Database connection failed
 
-- Confirm PostgreSQL is running
-- Verify `db.url`, `db.user`, and `db.password`
-- Confirm the database, schema, and required tables exist
-- Check PostgreSQL authentication rules in `pg_hba.conf`
-- Confirm the PostgreSQL JDBC driver is on the runtime classpath
+- Confirm PostgreSQL is running.
+- Confirm the database name and credentials.
+- Verify the JDBC URL.
+- Confirm required tables exist.
+- Verify the PostgreSQL JDBC JAR is on the runtime classpath.
 
-### Server cannot start
+### RMI server cannot start
 
-- Confirm port `1099`, or the configured port, is available
-- Check firewall and VPN rules for the RMI port
-- For remote access, set `java.rmi.server.hostname`
-- Verify `pg_dump` is available for backup operations
+- Confirm port `1099`, or the configured port, is available.
+- Check local firewall and network rules.
+- Set `java.rmi.server.hostname` for remote access.
+- Confirm `rmi.ServerMain` is compiled and runnable.
 
 ### Client cannot reach the server
 
-- Confirm the server process is running
-- Enter the server IP or hostname instead of `localhost` for another computer
-- Use the same RMI port on both client and server
-- Check that the server and client networks permit RMI traffic
+- Start the server first.
+- Replace `localhost` with the server's network address for remote use.
+- Confirm client and server ports match.
+- Check that RMI traffic is permitted on both computers.
 
-### JavaFX or JDBC class not found
+### JavaFX classes are missing
 
-- Add JavaFX SDK JARs to the runtime module or classpath
-- Add the PostgreSQL JDBC JAR
-- Add required VM options if JavaFX is not available on the classpath
+- Add the JavaFX SDK to the module/classpath.
+- Add JavaFX VM options for local execution.
+- Verify that the JDK and JavaFX versions match the project configuration.
 
-## Git and Team Workflow
+### Backup fails
 
-Use feature branches and merge them through pull requests.
+- Confirm `pg_dump` is installed.
+- Confirm `pg_dump` is available on `PATH`.
+- Confirm database credentials and URL are valid.
+- Confirm the server operating system can execute PostgreSQL client tools.
 
-```text
-git switch main
-git pull origin main
-git switch -c feature/your-feature
-```
+## Known Limitations
 
-Commit focused changes with clear messages:
-
-```text
-git add .
-git commit -m "feat: add stock movement report"
-git push origin feature/your-feature
-```
-
-Before merging:
-
-- Pull the latest `main`
-- Resolve merge conflicts locally
-- Compile and run the server and client
-- Verify database changes and permissions
-- Request a peer review
-- Do not commit passwords, database dumps, or generated build output
-
-## Contributors
-
-This repository is maintained by a team including:
-
-- Claire Maina
-- Jospinlevrai
-- Jospin Mukanire
-- Glovich
-- ampiremurhimanya
-- Sandie
-- Laureen774
+- The repository requires a manually prepared PostgreSQL schema.
+- There is no automated migration or seed script.
+- Automated tests are not included.
+- RMI session state is held only in server memory.
+- RMI discovery and backup operations require direct network/tool access.
+- The project has no application license unless one is explicitly added.
