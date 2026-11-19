@@ -11,6 +11,9 @@ public interface ProductRepository {
 
     List<Product> findActive();
 
+    /** Active products whose stock is at or below their configured reorder level. */
+    List<Product> findLowStock();
+
     /**
      * Adds delta (negative to remove) to the stock in one atomic statement, for example
      * UPDATE Products SET quantity_in_stock = quantity_in_stock + ? WHERE product_id = ? AND quantity_in_stock + ? >= 0.

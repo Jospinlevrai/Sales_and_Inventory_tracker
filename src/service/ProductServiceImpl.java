@@ -36,6 +36,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<Product> listLowStock(int actingUserId) {
+        access.require(actingUserId, Role.ADMIN, Role.MANAGER);
+        return products.findLowStock();
+    }
+
+    @Override
     public List<Product> searchProducts(String text, Integer categoryId) {
         return catalog.search(text, categoryId);
     }

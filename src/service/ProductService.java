@@ -18,4 +18,7 @@ public interface ProductService {
 
     /** Administrators and managers. Products are deactivated, never deleted. */
     void setProductActive(int actingUserId, int productId, boolean active);
+
+    /** Active products that are at or below their reorder level. */
+    List<Product> listLowStock(int actingUserId);
 }
