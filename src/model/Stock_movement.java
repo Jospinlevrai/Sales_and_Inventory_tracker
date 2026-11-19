@@ -7,7 +7,7 @@ public class Stock_movement  implements Serializable{
     
     private static final long serialVersionUID = 1L;
     public enum MovementType {
-        PURCHASE, SALE, SALE_VOID, ADJUSTMENT
+        PURCHASE, SALE, SALE_VOID, SALE_REFUND, ADJUSTMENT
     }
 
     private long movementId;

@@ -22,8 +22,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.geometry.Insets;
 import javafx.stage.FileChooser;
 import model.Sale;
+import model.Sale_item;
 import service.ReportService;
 
 import java.io.File;
@@ -32,7 +37,9 @@ import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DashboardController {
@@ -55,6 +62,7 @@ public class DashboardController {
     @FXML private TableColumn<PaymentTotal, BigDecimal> colPayAmount;
 
     @FXML private Button voidSaleButton;
+    @FXML private Button refundSaleButton;
     @FXML private TableView<RecentSale> recentSalesTable;
     @FXML private TableColumn<RecentSale, String> colSaleReceipt;
     @FXML private TableColumn<RecentSale, String> colSaleDate;
@@ -184,6 +192,92 @@ public class DashboardController {
                         refreshDashboard();
                     },
                     () -> voidSaleButton.setDisable(false)
+            );
+        });
+    }
+
+    @FXML
+    private void handleRefundSale() {
+        RecentSale selected = recentSalesTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            UiAlerts.warn("No Sale Selected", "Select a completed sale to refund.");
+            return;
+        }
+        if (selected.getStatus() == Sale.Status.VOIDED
+                || selected.getStatus() == Sale.Status.REFUNDED) {
+            UiAlerts.warn("Cannot Refund", "This sale is already " + selected.getStatus().name().toLowerCase() + ".");
+            return;
+        }
+
+        List<Sale_item> items;
+        try {
+            items = SessionContext.sales().getSaleItems(selected.getSaleId());
+        } catch (RuntimeException e) {
+            UiAlerts.handleException(e);
+            return;
+        }
+
+        javafx.scene.control.Dialog<String[]> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Refund Sale");
+        dialog.setHeaderText("Refund items from receipt " + selected.getReceiptNo());
+        javafx.scene.control.ButtonType refundType = new javafx.scene.control.ButtonType(
+                "Apply Refund", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(refundType, javafx.scene.control.ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(8);
+        grid.setPadding(new Insets(20, 20, 10, 20));
+        Map<Integer, TextField> quantityFields = new HashMap<>();
+
+        int row = 0;
+        for (Sale_item item : items) {
+            Label label = new Label("Product " + item.getProductId() + " (sold " + item.getQuantity() + "):");
+            TextField field = new TextField("0");
+            field.setPrefWidth(90);
+            quantityFields.put(item.getProductId(), field);
+            grid.add(label, 0, row);
+            grid.add(field, 1, row++);
+        }
+
+        TextField reasonField = new TextField();
+        reasonField.setPromptText("Reason for refund");
+        grid.add(new Label("Reason:"), 0, row);
+        grid.add(reasonField, 1, row);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(button -> button == refundType
+                ? new String[] {reasonField.getText(), String.valueOf(row)}
+                : null);
+
+        dialog.showAndWait().ifPresent(values -> {
+            Map<Integer, Integer> quantities = new HashMap<>();
+            for (Map.Entry<Integer, TextField> entry : quantityFields.entrySet()) {
+                try {
+                    int quantity = Integer.parseInt(entry.getValue().getText().trim());
+                    if (quantity > 0) {
+                        quantities.put(entry.getKey(), quantity);
+                    }
+                } catch (NumberFormatException e) {
+                    UiAlerts.warn("Invalid Quantity", "Refund quantities must be whole numbers.");
+                    return;
+                }
+            }
+            if (quantities.isEmpty()) {
+                UiAlerts.warn("No Items", "Enter a quantity greater than zero for at least one item.");
+                return;
+            }
+
+            refundSaleButton.setDisable(true);
+            AsyncTask.runVoid(
+                    () -> SessionContext.sales().refundSale(selected.getSaleId(),
+                            SessionContext.getUserId(), quantities, values[0]),
+                    () -> {
+                        refundSaleButton.setDisable(false);
+                        UiAlerts.info("Refund Applied", "Stock and refund records have been updated.");
+                        refreshDashboard();
+                    },
+                    () -> refundSaleButton.setDisable(false)
             );
         });
     }
