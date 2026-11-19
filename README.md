@@ -472,7 +472,7 @@ No automated test suite is currently included in the repository. Release testing
 
 ## Team
 
-| Team Member |
+| Team Members |
 |---|
 | Claire Maina |
 | Jospin Mukanire |
