@@ -5,8 +5,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PurchaseRequest {
-    public static class Line {
+public class PurchaseRequest implements ActingUserRequest, java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+    public static class Line implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private int productId;
         private int quantity;
         private BigDecimal unitCost;

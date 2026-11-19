@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="14.0" style="-fx-background-color: #f8fafc;"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controller.PurchaseController">
+    <padding>
+        <Insets bottom="18.0" left="20.0" right="20.0" top="18.0"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"
+               text="Record Supplier Delivery"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button onAction="#refreshLookups" text="Refresh Lists"/>
+    </HBox>
+
+    <!-- Delivery Header -->
+    <GridPane hgap="14.0" vgap="10.0"
+              style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 14;">
+        <columnConstraints>
+            <ColumnConstraints percentWidth="15.0"/>
+            <ColumnConstraints percentWidth="35.0"/>
+            <ColumnConstraints percentWidth="15.0"/>
+            <ColumnConstraints percentWidth="35.0"/>
+        </columnConstraints>
+
+        <Label text="Supplier:*" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <ComboBox fx:id="supplierBox" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+
+        <Label text="Invoice No:" GridPane.columnIndex="2" GridPane.rowIndex="0"/>
+        <TextField fx:id="invoiceField" promptText="Optional supplier invoice #" GridPane.columnIndex="3" GridPane.rowIndex="0"/>
+
+        <Label text="Delivery Date:" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <DatePicker fx:id="deliveryDatePicker" maxWidth="Infinity" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+
+        <Label text="Notes:" GridPane.columnIndex="2" GridPane.rowIndex="1"/>
+        <TextField fx:id="notesField" promptText="Optional delivery notes" GridPane.columnIndex="3" GridPane.rowIndex="1"/>
+    </GridPane>
+
+    <!-- Add Delivery Line Bar -->
+    <HBox alignment="CENTER_LEFT" spacing="10.0"
+          style="-fx-background-color: white; -fx-border-color: #e2e8f0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-padding: 12;">
+        <Label style="-fx-font-weight: bold;" text="Add Item:"/>
+        <ComboBox fx:id="productBox" onAction="#handleProductPicked" prefWidth="280.0" promptText="Select active product"/>
+        <TextField fx:id="qtyField" prefWidth="90.0" promptText="Qty"/>
+        <TextField fx:id="unitCostField" prefWidth="115.0" promptText="Unit Cost"/>
+        <Button onAction="#handleAddLine"
+                style="-fx-background-color: #0284c7; -fx-text-fill: white; -fx-font-weight: bold;"
+                text="+ Add Line"/>
+    </HBox>
+
+    <!-- Delivery Items Table -->
+    <TableView fx:id="linesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colLineSku" prefWidth="110.0" text="SKU"/>
+            <TableColumn fx:id="colLineProduct" prefWidth="280.0" text="Product"/>
+            <TableColumn fx:id="colLineQty" prefWidth="95.0" text="Quantity"/>
+            <TableColumn fx:id="colLineCost" prefWidth="115.0" text="Unit Cost"/>
+            <TableColumn fx:id="colLineTotal" prefWidth="125.0" text="Line Total"/>
+            <TableColumn fx:id="colLineRemove" prefWidth="90.0" text=""/>
+        </columns>
+    </TableView>
+
+    <Separator/>
+
+    <HBox alignment="CENTER_LEFT" spacing="14.0">
+        <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Total Delivery Cost:"/>
+        <Label fx:id="totalCostLabel" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #2563eb;" text="0.00"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button onAction="#handleClearForm" text="Clear"/>
+        <Button fx:id="submitButton" onAction="#handleRecordDelivery"
+                style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-padding: 10 20; -fx-background-radius: 6;"
+                text="Record Delivery &amp; Update Stock"/>
+    </HBox>
+</VBox>

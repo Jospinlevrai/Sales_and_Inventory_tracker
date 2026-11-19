@@ -1,8 +1,11 @@
 package dto;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
 
-public class CashierSummary {
+public class CashierSummary  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final int userId;
     private final int salesCount;
     private final BigDecimal takings;

@@ -3,7 +3,11 @@ package dto;
 import model.User;
 
 /** A user as the screens see it: never carries the password hash. */
-public class UserInfo {
+import java.io.Serializable;
+
+public class UserInfo  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final int userId;
     private final String username;
     private final String fullName;

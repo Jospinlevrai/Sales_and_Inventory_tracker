@@ -1,7 +1,11 @@
 package dto;
 
 /** What the administrator types when creating or editing a user. The password is only used when creating. */
-public class UserRequest {
+import java.io.Serializable;
+
+public class UserRequest  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private String username;
     private String fullName;
     private String email;

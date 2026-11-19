@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="12.0" style="-fx-background-color: #f8fafc;"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controller.UsersController">
+    <padding>
+        <Insets bottom="18.0" left="20.0" right="20.0" top="18.0"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Label style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #0f172a;"
+               text="User Accounts &amp; Roles"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button onAction="#handleCreateUser"
+                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"
+                text="+ Create User"/>
+        <Button onAction="#handleEditUser" text="Edit User"/>
+        <Button onAction="#handleResetPassword" text="Reset Password"/>
+        <Button onAction="#handleToggleActive" text="Activate / Deactivate"/>
+        <Button onAction="#refreshUsers" text="Refresh"/>
+    </HBox>
+
+    <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colUserId" prefWidth="65.0" text="ID"/>
+            <TableColumn fx:id="colUsername" prefWidth="140.0" text="Username"/>
+            <TableColumn fx:id="colFullName" prefWidth="190.0" text="Full Name"/>
+            <TableColumn fx:id="colRole" prefWidth="110.0" text="Role"/>
+            <TableColumn fx:id="colEmail" prefWidth="190.0" text="Email"/>
+            <TableColumn fx:id="colPhone" prefWidth="135.0" text="Phone"/>
+            <TableColumn fx:id="colStatus" prefWidth="95.0" text="Status"/>
+        </columns>
+    </TableView>
+</VBox>

@@ -3,8 +3,11 @@ package dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import model.Sale;
+import java.io.Serializable;
 
-public class RecentSale {
+public class  RecentSale  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final int saleId;
     private final String receiptNo;
     private final LocalDateTime saleDate;

@@ -1,8 +1,11 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class User {
+public class User implements Serializable {
+    
+    private static final long serialVersionUID = 1L;
     private int userId;
     private int roleId;
     private String username;
@@ -19,6 +22,7 @@ public class User {
     public User(int userId, int roleId, String username, String passwordHash, String fullName,
                 String email, String phoneNumber, boolean active, LocalDateTime createdAt) {
         this.userId = userId;
+        this.roleId = roleId;
         this.username = username;
         this.passwordHash = passwordHash;
         this.fullName = fullName;
@@ -28,50 +32,77 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public int getUserId() { 
-        return userId; }
-    public void setUserId(int userId) { 
-        this.userId = userId; }
+    public int getUserId() {
+        return userId;
+    }
 
-    public int getRoleId() { return roleId; }
-    public void setRoleId(int roleId) { 
-        this.roleId = roleId; }
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { 
-        this.username = username; }
+    public int getRoleId() {
+        return roleId;
+    }
+
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getPasswordHash() {
-         return passwordHash; }
+        return passwordHash;
+    }
+
     public void setPasswordHash(String passwordHash) {
-         this.passwordHash = passwordHash; }
+        this.passwordHash = passwordHash;
+    }
 
-    public String getFullName() { return fullName; }
+    public String getFullName() {
+        return fullName;
+    }
+
     public void setFullName(String fullName) {
-         this.fullName = fullName; }
+        this.fullName = fullName;
+    }
 
-    public String getEmail() { return email; }
+    public String getEmail() {
+        return email;
+    }
+
     public void setEmail(String email) {
-         this.email = email; }
+        this.email = email;
+    }
 
     public String getPhoneNumber() {
-         return phoneNumber; 
-        
-        }
-    public void setPhoneNumber(String phoneNumber) 
-    { this.phoneNumber = phoneNumber;
+        return phoneNumber;
+    }
 
-     }
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-    public boolean isActive() { return active; }
+    public boolean isActive() {
+        return active;
+    }
+
     public void setActive(boolean active) {
-         this.active = active;
-         }
+        this.active = active;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
     public void setCreatedAt(LocalDateTime createdAt) {
-         this.createdAt = createdAt;
-         }
+        this.createdAt = createdAt;
+    }
 
     @Override
     public String toString() {

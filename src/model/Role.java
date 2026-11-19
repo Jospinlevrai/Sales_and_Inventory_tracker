@@ -1,6 +1,9 @@
 package model;
+import java.io.Serializable;
 
-public class Role {
+public class Role implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     public static final String ADMIN = "ADMIN";
     public static final String MANAGER = "MANAGER";
     public static final String CASHIER = "CASHIER";

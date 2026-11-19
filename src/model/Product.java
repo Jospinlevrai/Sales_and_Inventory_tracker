@@ -2,8 +2,11 @@ package model;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class Product {
+public class Product implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private int productId;
     private int categoryId;
     private Integer supplierId;

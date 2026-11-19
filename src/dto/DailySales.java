@@ -2,8 +2,11 @@ package dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.io.Serializable;
 
-public class DailySales {
+public class DailySales  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private final LocalDate day;
     private final int transactions;
     private final BigDecimal revenue;

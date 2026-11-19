@@ -1,8 +1,11 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class Stock_movement {
+public class Stock_movement  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     public enum MovementType {
         PURCHASE, SALE, SALE_VOID, ADJUSTMENT
     }

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="client.controller.MainShellController">
+
+    <!-- Top Header -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="14.0"
+              style="-fx-background-color: #1e293b; -fx-padding: 12 20;">
+            <Label style="-fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold;"
+                   text="Sales &amp; Inventory Tracker"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="userBadgeLabel"
+                   style="-fx-text-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+            <Button onAction="#handleChangePassword"
+                    style="-fx-background-color: #334155; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 6 12;"
+                    text="Change Password"/>
+            <Button onAction="#handleLogout"
+                    style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 6 14;"
+                    text="Logout"/>
+        </HBox>
+    </top>
+
+    <!-- Left Role-Based Navigation -->
+    <left>
+        <VBox prefWidth="205.0" spacing="8.0"
+              style="-fx-background-color: #0f172a; -fx-padding: 16 12;">
+            <Label style="-fx-text-fill: #94a3b8; -fx-font-size: 11px; -fx-font-weight: bold;"
+                   text="NAVIGATION"/>
+            <Separator opacity="0.2"/>
+
+            <Button fx:id="navDashboardBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showDashboard"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Dashboard"/>
+
+            <Button fx:id="navPosBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showPos"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="POS Checkout"/>
+
+            <Button fx:id="navInventoryBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showInventory"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Inventory &amp; Catalog"/>
+
+            <Button fx:id="navPurchasesBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showPurchases"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Supplier Deliveries"/>
+
+            <Button fx:id="navUsersBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showUsers"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Users &amp; Roles"/>
+        </VBox>
+    </left>
+
+    <!-- Dynamic Center Workspace -->
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: #f8fafc;"/>
+    </center>
+</BorderPane>

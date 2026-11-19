@@ -6,8 +6,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SaleRequest {
-    public static class Line {
+public class SaleRequest implements ActingUserRequest, java.io.Serializable {
+    private static final long serialVersionUID = 1L;
+    public static class Line implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private int productId;
         private int quantity;
 

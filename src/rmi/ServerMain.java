@@ -7,10 +7,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.sql.Connection;
 
-/**
- * Starts the server: java rmi.ServerMain [db.properties]
- * Options: -Dserver.port=1099, and -Djava.rmi.server.hostname=THIS-COMPUTER'S-ADDRESS when clients are on other computers.
- */
 public class ServerMain {
     public static void main(String[] args) throws Exception {
         String settings = args.length > 0 ? args[0] : "db.properties";
@@ -24,6 +20,6 @@ public class ServerMain {
         GatewayImpl gateway = new GatewayImpl(services, port);
         Registry registry = LocateRegistry.createRegistry(port);
         registry.rebind(RemoteGateway.NAME, gateway);
-        System.out.println("Inventory tracker server ready on port " + port + ". Press Ctrl+C to stop.");
+        System.out.println("Inventory tracker server ready on port " + port );
     }
 }

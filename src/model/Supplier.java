@@ -1,8 +1,11 @@
 package model;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
-public class Supplier {
+public class Supplier  implements Serializable{
+    
+    private static final long serialVersionUID = 1L;
     private int supplierId;
     private String supplierName;
     private String contactPerson;
