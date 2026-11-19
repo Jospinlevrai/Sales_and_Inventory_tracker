@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="TOP_CENTER" spacing="14.0" style="-fx-background-color: #f4f6f9;"
+      xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="client.controller.LoginController">
+    <padding>
+        <Insets bottom="24.0" left="32.0" right="32.0" top="28.0"/>
+    </padding>
+
+    <Label style="-fx-font-size: 22px; -fx-font-weight: bold; -fx-text-fill: #1e293b;"
+           text="Inventory &amp; POS Tracker"/>
+    <Label style="-fx-font-size: 13px; -fx-text-fill: #64748b;"
+           text="Sign in to start your session"/>
+
+    <VBox spacing="12.0"
+          style="-fx-background-color: white; -fx-background-radius: 8; -fx-border-color: #e2e8f0; -fx-border-radius: 8;">
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        </padding>
+
+        <VBox spacing="4.0">
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #334155;" text="Username"/>
+            <TextField fx:id="usernameField" promptText="Enter username"/>
+        </VBox>
+
+        <VBox spacing="4.0">
+            <Label style="-fx-font-weight: bold; -fx-text-fill: #334155;" text="Password"/>
+            <PasswordField fx:id="passwordField" onAction="#handleLogin" promptText="Enter password"/>
+        </VBox>
+
+        <TitledPane expanded="false" text="Server Connection Settings">
+            <GridPane hgap="10.0" vgap="8.0">
+                <columnConstraints>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="68.0"/>
+                    <ColumnConstraints hgrow="ALWAYS" percentWidth="32.0"/>
+                </columnConstraints>
+                <VBox spacing="3.0" GridPane.columnIndex="0">
+                    <Label text="Host"/>
+                    <TextField fx:id="hostField" text="localhost"/>
+                </VBox>
+                <VBox spacing="3.0" GridPane.columnIndex="1">
+                    <Label text="Port"/>
+                    <TextField fx:id="portField" text="1099"/>
+                </VBox>
+            </GridPane>
+        </TitledPane>
+
+        <Label fx:id="statusLabel" style="-fx-text-fill: #dc2626; -fx-font-size: 12px;" wrapText="true"/>
+
+        <Button fx:id="loginButton" defaultButton="true" maxWidth="Infinity" onAction="#handleLogin"
+                style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 10 16; -fx-background-radius: 6;"
+                text="Sign In"/>
+    </VBox>
+
+    <Separator/>
+
+    <HBox alignment="CENTER">
+        <Hyperlink onAction="#handleFirstAdminSetup" text="First-time setup? Create initial Administrator"/>
+    </HBox>
+</VBox>
