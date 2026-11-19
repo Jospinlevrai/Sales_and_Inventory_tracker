@@ -38,6 +38,9 @@
                 <Button onAction="#refreshDashboard"
                         style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"
                         text="Refresh"/>
+                <Button onAction="#handleExportCsv"
+                        style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"
+                        text="Export CSV"/>
             </HBox>
 
             <!-- KPI Cards Grid -->
