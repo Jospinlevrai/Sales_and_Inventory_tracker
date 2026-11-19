@@ -3,6 +3,7 @@ package client;
 import dto.UserInfo;
 import rmi.RemoteServices;
 import service.AuthService;
+import service.AuditService;
 import service.BackupService;
 import service.CategoryService;
 import service.ProductService;
@@ -71,4 +72,5 @@ public final class SessionContext {
     public static StockService stock() { return remote.service(StockService.class); }
     public static ReportService reports() { return remote.service(ReportService.class); }
     public static BackupService backups() { return remote.service(BackupService.class); }
+    public static AuditService audits() { return remote.service(AuditService.class); }
 }
