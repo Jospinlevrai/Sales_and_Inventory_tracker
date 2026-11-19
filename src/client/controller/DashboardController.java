@@ -22,16 +22,22 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
+import javafx.stage.FileChooser;
 import model.Sale;
 import service.ReportService;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
 public class DashboardController {
     private static final DateTimeFormatter TS_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private DashboardData lastData;
 
     @FXML private ComboBox<Integer> daysRangeBox;
     @FXML private Label kpiRevenueLabel;
@@ -129,6 +135,8 @@ public class DashboardController {
     }
 
     private void applyData(DashboardData data) {
+        lastData = data;
+
         DashboardSummary s = data.summary;
         kpiRevenueLabel.setText(s.getRevenueToday().toPlainString());
         kpiTransactionsLabel.setText(String.valueOf(s.getTransactionsToday()));
@@ -178,6 +186,86 @@ public class DashboardController {
                     () -> voidSaleButton.setDisable(false)
             );
         });
+    }
+
+    @FXML
+    private void handleExportCsv() {
+        if (lastData == null) {
+            UiAlerts.warn("No Report Data", "Refresh the dashboard before exporting.");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Export Dashboard Report");
+        chooser.setInitialFileName("dashboard-report.csv");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = chooser.showSaveDialog(revenueChart.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+
+        try (PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8)) {
+            writeCsvReport(writer);
+            UiAlerts.info("Report Exported", "Dashboard report saved to " + file.getAbsolutePath());
+        } catch (IOException e) {
+            UiAlerts.error("Export Failed", "Could not save the report: " + e.getMessage());
+        }
+    }
+
+    private void writeCsvReport(PrintWriter writer) {
+        DashboardSummary summary = lastData.summary;
+        writer.println("DASHBOARD SUMMARY");
+        writer.println("Metric,Value");
+        writer.println("Revenue today," + csv(summary.getRevenueToday().toPlainString()));
+        writer.println("Transactions today," + summary.getTransactionsToday());
+        writer.println("Gross profit today," + csv(summary.getGrossProfitToday().toPlainString()));
+        writer.println("Stock value," + csv(summary.getStockValue().toPlainString()));
+        writer.println("Needs reorder," + summary.getNeedsReorder());
+        writer.println("Out of stock," + summary.getOutOfStock());
+
+        writer.println();
+        writer.println("DAILY SALES");
+        writer.println("Date,Transactions,Revenue");
+        for (DailySales day : lastData.dailySales) {
+            writer.println(csv(day.getDay().toString()) + "," + day.getTransactions() + ","
+                    + csv(day.getRevenue().toPlainString()));
+        }
+
+        writer.println();
+        writer.println("TOP SELLING PRODUCTS");
+        writer.println("SKU,Product,Units sold,Revenue,Gross profit");
+        for (ProductSales product : lastData.topProducts) {
+            writer.println(csv(product.getSku()) + "," + csv(product.getProductName()) + ","
+                    + product.getUnitsSold() + "," + csv(product.getRevenue().toPlainString()) + ","
+                    + csv(product.getGrossProfit().toPlainString()));
+        }
+
+        writer.println();
+        writer.println("RECENT SALES");
+        writer.println("Receipt,Date,Cashier,Payment,Total,Status");
+        for (RecentSale sale : lastData.recentSales) {
+            writer.println(csv(sale.getReceiptNo()) + ","
+                    + csv(sale.getSaleDate() == null ? "" : sale.getSaleDate().format(TS_FORMAT)) + ","
+                    + csv(sale.getCashier()) + "," + sale.getPaymentMethod() + ","
+                    + csv(sale.getTotalAmount().toPlainString()) + "," + sale.getStatus());
+        }
+
+        writer.println();
+        writer.println("RECENT STOCK MOVEMENTS");
+        writer.println("Date,Product,Type,Quantity,User,Note");
+        for (MovementEntry movement : lastData.movements) {
+            writer.println(csv(movement.getCreatedAt() == null ? "" : movement.getCreatedAt().format(TS_FORMAT)) + ","
+                    + csv(movement.getProductName()) + "," + movement.getMovementType() + ","
+                    + movement.getQuantityChange() + "," + csv(movement.getDoneBy()) + ","
+                    + csv(movement.getNote()));
+        }
+    }
+
+    private static String csv(String value) {
+        if (value == null) {
+            return "\"\"";
+        }
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
     private static final class DashboardData {
