@@ -33,6 +33,7 @@ public class MainShellController {
     @FXML private Button navInventoryBtn;
     @FXML private Button navPurchasesBtn;
     @FXML private Button navUsersBtn;
+    @FXML private Button navAuditBtn;
     @FXML private StackPane contentArea;
 
     @FXML private Button backupButton;
@@ -42,7 +43,7 @@ public class MainShellController {
 
     @FXML
     public void initialize() {
-        allNavButtons = Arrays.asList(navDashboardBtn, navPosBtn, navInventoryBtn, navPurchasesBtn, navUsersBtn);
+        allNavButtons = Arrays.asList(navDashboardBtn, navPosBtn, navInventoryBtn, navPurchasesBtn, navUsersBtn, navAuditBtn);
         UserInfo user = SessionContext.getUser();
         if (user == null) {
             ClientApp.showLogin();
@@ -60,6 +61,7 @@ public class MainShellController {
         setNavVisible(navInventoryBtn, isManagerOrAdmin);
         setNavVisible(navPurchasesBtn, isManagerOrAdmin);
         setNavVisible(navUsersBtn, isAdmin);
+        setNavVisible(navAuditBtn, isManagerOrAdmin);
         setNavVisible(backupButton, isAdmin);
         setNavVisible(exportButton, isAdmin);
 
@@ -93,6 +95,11 @@ public class MainShellController {
     @FXML
     public void showUsers() {
         loadView("/client/fxml/UsersView.fxml", navUsersBtn);
+    }
+
+    @FXML
+    public void showAudit() {
+        loadView("/client/fxml/AuditView.fxml", navAuditBtn);
     }
 
     @FXML

@@ -69,6 +69,11 @@
                     onAction="#showUsers"
                     style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
                     text="Users &amp; Roles"/>
+
+            <Button fx:id="navAuditBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showAudit"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Audit Logs"/>
         </VBox>
     </left>
 
