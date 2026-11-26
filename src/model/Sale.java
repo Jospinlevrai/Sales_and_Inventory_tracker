@@ -14,7 +14,7 @@ public class Sale implements Serializable{
     }
 
     public enum Status {
-        COMPLETED, VOIDED
+        COMPLETED, VOIDED, REFUNDED
     }
 
     private int saleId;

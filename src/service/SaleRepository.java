@@ -18,4 +18,6 @@ public interface SaleRepository {
     List<Sale_item> findItems(int saleId);
 
     void updateStatus(int saleId, Sale.Status status);
+
+    int refundedQuantity(int saleId, int productId);
 }

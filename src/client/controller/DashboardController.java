@@ -22,16 +22,29 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
+import javafx.geometry.Insets;
+import javafx.stage.FileChooser;
 import model.Sale;
+import model.Sale_item;
 import service.ReportService;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DashboardController {
     private static final DateTimeFormatter TS_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private DashboardData lastData;
 
     @FXML private ComboBox<Integer> daysRangeBox;
     @FXML private Label kpiRevenueLabel;
@@ -49,6 +62,7 @@ public class DashboardController {
     @FXML private TableColumn<PaymentTotal, BigDecimal> colPayAmount;
 
     @FXML private Button voidSaleButton;
+    @FXML private Button refundSaleButton;
     @FXML private TableView<RecentSale> recentSalesTable;
     @FXML private TableColumn<RecentSale, String> colSaleReceipt;
     @FXML private TableColumn<RecentSale, String> colSaleDate;
@@ -129,6 +143,8 @@ public class DashboardController {
     }
 
     private void applyData(DashboardData data) {
+        lastData = data;
+
         DashboardSummary s = data.summary;
         kpiRevenueLabel.setText(s.getRevenueToday().toPlainString());
         kpiTransactionsLabel.setText(String.valueOf(s.getTransactionsToday()));
@@ -178,6 +194,172 @@ public class DashboardController {
                     () -> voidSaleButton.setDisable(false)
             );
         });
+    }
+
+    @FXML
+    private void handleRefundSale() {
+        RecentSale selected = recentSalesTable.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            UiAlerts.warn("No Sale Selected", "Select a completed sale to refund.");
+            return;
+        }
+        if (selected.getStatus() == Sale.Status.VOIDED
+                || selected.getStatus() == Sale.Status.REFUNDED) {
+            UiAlerts.warn("Cannot Refund", "This sale is already " + selected.getStatus().name().toLowerCase() + ".");
+            return;
+        }
+
+        List<Sale_item> items;
+        try {
+            items = SessionContext.sales().getSaleItems(selected.getSaleId());
+        } catch (RuntimeException e) {
+            UiAlerts.handleException(e);
+            return;
+        }
+
+        javafx.scene.control.Dialog<String[]> dialog = new javafx.scene.control.Dialog<>();
+        dialog.setTitle("Refund Sale");
+        dialog.setHeaderText("Refund items from receipt " + selected.getReceiptNo());
+        javafx.scene.control.ButtonType refundType = new javafx.scene.control.ButtonType(
+                "Apply Refund", javafx.scene.control.ButtonBar.ButtonData.OK_DONE);
+        dialog.getDialogPane().getButtonTypes().addAll(refundType, javafx.scene.control.ButtonType.CANCEL);
+
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(8);
+        grid.setPadding(new Insets(20, 20, 10, 20));
+        Map<Integer, TextField> quantityFields = new HashMap<>();
+
+        int row = 0;
+        for (Sale_item item : items) {
+            Label label = new Label("Product " + item.getProductId() + " (sold " + item.getQuantity() + "):");
+            TextField field = new TextField("0");
+            field.setPrefWidth(90);
+            quantityFields.put(item.getProductId(), field);
+            grid.add(label, 0, row);
+            grid.add(field, 1, row++);
+        }
+
+        TextField reasonField = new TextField();
+        reasonField.setPromptText("Reason for refund");
+        grid.add(new Label("Reason:"), 0, row);
+        grid.add(reasonField, 1, row);
+        dialog.getDialogPane().setContent(grid);
+
+        dialog.setResultConverter(button -> button == refundType
+                ? new String[] {reasonField.getText(), String.valueOf(row)}
+                : null);
+
+        dialog.showAndWait().ifPresent(values -> {
+            Map<Integer, Integer> quantities = new HashMap<>();
+            for (Map.Entry<Integer, TextField> entry : quantityFields.entrySet()) {
+                try {
+                    int quantity = Integer.parseInt(entry.getValue().getText().trim());
+                    if (quantity > 0) {
+                        quantities.put(entry.getKey(), quantity);
+                    }
+                } catch (NumberFormatException e) {
+                    UiAlerts.warn("Invalid Quantity", "Refund quantities must be whole numbers.");
+                    return;
+                }
+            }
+            if (quantities.isEmpty()) {
+                UiAlerts.warn("No Items", "Enter a quantity greater than zero for at least one item.");
+                return;
+            }
+
+            refundSaleButton.setDisable(true);
+            AsyncTask.runVoid(
+                    () -> SessionContext.sales().refundSale(selected.getSaleId(),
+                            SessionContext.getUserId(), quantities, values[0]),
+                    () -> {
+                        refundSaleButton.setDisable(false);
+                        UiAlerts.info("Refund Applied", "Stock and refund records have been updated.");
+                        refreshDashboard();
+                    },
+                    () -> refundSaleButton.setDisable(false)
+            );
+        });
+    }
+
+    @FXML
+    private void handleExportCsv() {
+        if (lastData == null) {
+            UiAlerts.warn("No Report Data", "Refresh the dashboard before exporting.");
+            return;
+        }
+
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Export Dashboard Report");
+        chooser.setInitialFileName("dashboard-report.csv");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV Files", "*.csv"));
+        File file = chooser.showSaveDialog(revenueChart.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+
+        try (PrintWriter writer = new PrintWriter(file, StandardCharsets.UTF_8)) {
+            writeCsvReport(writer);
+            UiAlerts.info("Report Exported", "Dashboard report saved to " + file.getAbsolutePath());
+        } catch (IOException e) {
+            UiAlerts.error("Export Failed", "Could not save the report: " + e.getMessage());
+        }
+    }
+
+    private void writeCsvReport(PrintWriter writer) {
+        DashboardSummary summary = lastData.summary;
+        writer.println("DASHBOARD SUMMARY");
+        writer.println("Metric,Value");
+        writer.println("Revenue today," + csv(summary.getRevenueToday().toPlainString()));
+        writer.println("Transactions today," + summary.getTransactionsToday());
+        writer.println("Gross profit today," + csv(summary.getGrossProfitToday().toPlainString()));
+        writer.println("Stock value," + csv(summary.getStockValue().toPlainString()));
+        writer.println("Needs reorder," + summary.getNeedsReorder());
+        writer.println("Out of stock," + summary.getOutOfStock());
+
+        writer.println();
+        writer.println("DAILY SALES");
+        writer.println("Date,Transactions,Revenue");
+        for (DailySales day : lastData.dailySales) {
+            writer.println(csv(day.getDay().toString()) + "," + day.getTransactions() + ","
+                    + csv(day.getRevenue().toPlainString()));
+        }
+
+        writer.println();
+        writer.println("TOP SELLING PRODUCTS");
+        writer.println("SKU,Product,Units sold,Revenue,Gross profit");
+        for (ProductSales product : lastData.topProducts) {
+            writer.println(csv(product.getSku()) + "," + csv(product.getProductName()) + ","
+                    + product.getUnitsSold() + "," + csv(product.getRevenue().toPlainString()) + ","
+                    + csv(product.getGrossProfit().toPlainString()));
+        }
+
+        writer.println();
+        writer.println("RECENT SALES");
+        writer.println("Receipt,Date,Cashier,Payment,Total,Status");
+        for (RecentSale sale : lastData.recentSales) {
+            writer.println(csv(sale.getReceiptNo()) + ","
+                    + csv(sale.getSaleDate() == null ? "" : sale.getSaleDate().format(TS_FORMAT)) + ","
+                    + csv(sale.getCashier()) + "," + sale.getPaymentMethod() + ","
+                    + csv(sale.getTotalAmount().toPlainString()) + "," + sale.getStatus());
+        }
+
+        writer.println();
+        writer.println("RECENT STOCK MOVEMENTS");
+        writer.println("Date,Product,Type,Quantity,User,Note");
+        for (MovementEntry movement : lastData.movements) {
+            writer.println(csv(movement.getCreatedAt() == null ? "" : movement.getCreatedAt().format(TS_FORMAT)) + ","
+                    + csv(movement.getProductName()) + "," + movement.getMovementType() + ","
+                    + movement.getQuantityChange() + "," + csv(movement.getDoneBy()) + ","
+                    + csv(movement.getNote()));
+        }
+    }
+
+    private static String csv(String value) {
+        if (value == null) {
+            return "\"\"";
+        }
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 
     private static final class DashboardData {

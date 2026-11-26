@@ -89,20 +89,19 @@ public class PurchaseServiceImpl implements PurchaseService {
         if (request.getUserId() <= 0) {
             throw new BusinessRuleException("The user recording the delivery is missing");
         }
-        if (request.getPurchaseDate() != null && request.getPurchaseDate().isAfter(LocalDate.now())) {
-            throw new BusinessRuleException("The delivery date cannot be in the future");
-        }
+        Text.deliveryDate(request.getPurchaseDate());
         if (request.getLines() == null || request.getLines().isEmpty()) {
             throw new BusinessRuleException("Add at least one product to the delivery");
         }
         Set<Integer> seen = new HashSet<>();
         for (PurchaseRequest.Line line : request.getLines()) {
-            if (line.getQuantity() <= 0) {
-                throw new BusinessRuleException("Each quantity must be at least 1");
+            if (line.getProductId() <= 0) {
+                throw new BusinessRuleException("Choose a valid product");
             }
-            if (line.getUnitCost() == null || line.getUnitCost().signum() < 0) {
-                throw new BusinessRuleException("Each unit cost must be zero or more");
+            if (line.getQuantity() < 1 || line.getQuantity() > 1_000_000) {
+                throw new BusinessRuleException("Each purchase quantity must be between 1 and 1000000");
             }
+            Text.money(line.getUnitCost(), "Unit cost");
             if (!seen.add(line.getProductId())) {
                 throw new BusinessRuleException("Product " + line.getProductId() + " appears twice; combine the lines");
             }

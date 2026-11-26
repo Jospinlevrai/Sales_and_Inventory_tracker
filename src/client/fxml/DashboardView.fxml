@@ -38,6 +38,9 @@
                 <Button onAction="#refreshDashboard"
                         style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-weight: bold;"
                         text="Refresh"/>
+                <Button onAction="#handleExportCsv"
+                        style="-fx-background-color: #16a34a; -fx-text-fill: white; -fx-font-weight: bold;"
+                        text="Export CSV"/>
             </HBox>
 
             <!-- KPI Cards Grid -->
@@ -121,6 +124,9 @@
                             <Button fx:id="voidSaleButton" onAction="#handleVoidSale"
                                     style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold;"
                                     text="Void Selected Sale"/>
+                            <Button fx:id="refundSaleButton" onAction="#handleRefundSale"
+                                    style="-fx-background-color: #ea580c; -fx-text-fill: white; -fx-font-weight: bold;"
+                                    text="Refund Selected Sale"/>
                         </HBox>
                         <TableView fx:id="recentSalesTable" VBox.vgrow="ALWAYS">
                             <columns>

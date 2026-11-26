@@ -184,4 +184,16 @@ public class DBConnection {
             }
         }
     }
+
+    String getUrl() {
+        return url;
+    }
+
+    String getUser() {
+        return user;
+    }
+
+    String getPassword() {
+        return password;
+    }
 }

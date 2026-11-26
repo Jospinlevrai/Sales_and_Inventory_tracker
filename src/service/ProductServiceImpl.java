@@ -36,6 +36,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public List<Product> listLowStock(int actingUserId) {
+        access.require(actingUserId, Role.ADMIN, Role.MANAGER);
+        return products.findLowStock();
+    }
+
+    @Override
     public List<Product> searchProducts(String text, Integer categoryId) {
         return catalog.search(text, categoryId);
     }
@@ -90,6 +96,7 @@ public class ProductServiceImpl implements ProductService {
         if (input.getReorderLevel() < 0) {
             throw new BusinessRuleException("The reorder level cannot be negative");
         }
+        Text.nonNegativeInteger(input.getReorderLevel(), 1_000_000, "Reorder level");
         if (!categories.findById(input.getCategoryId()).isPresent()) {
             throw new BusinessRuleException("Choose a category that exists");
         }

@@ -7,6 +7,8 @@ import exception.BusinessRuleException;
 import service.ActingUser;
 import service.AppServices;
 import service.AuthService;
+import service.AuditService;
+import service.BackupService;
 import service.CategoryService;
 import service.ProductService;
 import service.PurchaseService;
@@ -62,6 +64,7 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
     }
 
     private final transient AuthService auth;
+    private final transient AuditService audits;
     private final transient Map<String, Operation> operations = new HashMap<>();
     private final transient Map<String, Integer> sessions = new ConcurrentHashMap<>();
 
@@ -69,6 +72,7 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
     public GatewayImpl(AppServices services, int port) throws RemoteException {
         super(port);
         this.auth = services.auth();
+        this.audits = services.audits();
         register(AuthService.class, services.auth());
         register(UserService.class, services.users());
         register(CategoryService.class, services.categories());
@@ -78,6 +82,8 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
         register(PurchaseService.class, services.purchases());
         register(StockService.class, services.stock());
         register(ReportService.class, services.reports());
+        register(BackupService.class, services.backups());
+        register(AuditService.class, services.audits());
     }
 
     private void register(Class<?> type, Object service) {
@@ -130,7 +136,12 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
             }
         }
         try {
-            return operation.method.invoke(operation.service, args);
+            Object result = operation.method.invoke(operation.service, args);
+            if (userId != null && shouldAudit(service, method)) {
+                audits.record(userId, service + "." + method, service,
+                        describeArguments(args), "Remote operation completed");
+            }
+            return result;
         } catch (InvocationTargetException e) {
             Throwable cause = e.getCause();
             if (cause instanceof RuntimeException) {
@@ -143,5 +154,30 @@ public class GatewayImpl extends UnicastRemoteObject implements RemoteGateway {
         } catch (IllegalAccessException | IllegalArgumentException e) {
             throw new RemoteException("Invalid request for " + service + "." + method + ": " + e.getMessage(), e);
         }
+    }
+
+    private static boolean shouldAudit(String service, String method) {
+        if (method.startsWith("get") || method.startsWith("list") || method.startsWith("find")
+                || method.startsWith("search") || method.startsWith("exportable")) {
+            return false;
+        }
+        return service.equals("UserService") || service.equals("CategoryService")
+                || service.equals("SupplierService") || service.equals("ProductService")
+                || service.equals("SaleService") || service.equals("PurchaseService")
+                || service.equals("StockService") || service.equals("BackupService")
+                || method.equals("changeOwnPassword") || method.equals("resetPassword");
+    }
+
+    private static String describeArguments(Object[] args) {
+        if (args == null || args.length == 0) {
+            return "No arguments";
+        }
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (i > 0) text.append(" | ");
+            Object arg = args[i];
+            text.append(arg == null ? "null" : arg.getClass().getSimpleName());
+        }
+        return text.toString();
     }
 }

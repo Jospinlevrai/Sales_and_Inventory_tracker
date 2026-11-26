@@ -34,6 +34,7 @@ import java.util.Optional;
 
 public class InventoryController {
     @FXML private CheckBox showInactiveProductsCheck;
+    @FXML private CheckBox lowStockOnlyCheck;
     @FXML private TableView<Product> productsTable;
     @FXML private TableColumn<Product, String> colProdSku;
     @FXML private TableColumn<Product, String> colProdBarcode;
@@ -134,6 +135,13 @@ public class InventoryController {
     @FXML
     public void loadProducts() {
         boolean activeOnly = !showInactiveProductsCheck.isSelected();
+        if (lowStockOnlyCheck.isSelected()) {
+            AsyncTask.run(
+                    () -> SessionContext.products().listLowStock(SessionContext.getUserId()),
+                    list -> productsTable.getItems().setAll(list)
+            );
+            return;
+        }
         AsyncTask.run(
                 () -> SessionContext.products().listProducts(activeOnly),
                 list -> productsTable.getItems().setAll(list)

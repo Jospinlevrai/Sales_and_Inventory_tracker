@@ -28,6 +28,12 @@
             <Button onAction="#handleLogout"
                     style="-fx-background-color: #dc2626; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-padding: 6 14;"
                     text="Logout"/>
+            <Button fx:id="backupButton" onAction="#handleDatabaseBackup"
+                    style="-fx-background-color: #334155; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 6 12;"
+                    text="Backup Database"/>
+            <Button fx:id="exportButton" onAction="#handleDataExport"
+                    style="-fx-background-color: #334155; -fx-text-fill: white; -fx-background-radius: 5; -fx-padding: 6 12;"
+                    text="Export Data"/>
         </HBox>
     </top>
 
@@ -64,6 +70,11 @@
                     onAction="#showUsers"
                     style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
                     text="Users &amp; Roles"/>
+
+            <Button fx:id="navAuditBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
+                    onAction="#showAudit"
+                    style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
+                    text="Audit Logs"/>
         </VBox>
     </left>
 
