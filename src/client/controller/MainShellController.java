@@ -30,6 +30,7 @@ public class MainShellController {
     @FXML private Label userBadgeLabel;
     @FXML private Button navDashboardBtn;
     @FXML private Button navPosBtn;
+    @FXML private Button navMyShiftBtn;
     @FXML private Button navInventoryBtn;
     @FXML private Button navPurchasesBtn;
     @FXML private Button navUsersBtn;
@@ -43,7 +44,9 @@ public class MainShellController {
 
     @FXML
     public void initialize() {
-        allNavButtons = Arrays.asList(navDashboardBtn, navPosBtn, navInventoryBtn, navPurchasesBtn, navUsersBtn, navAuditBtn);
+allNavButtons = Arrays.asList(
+        navDashboardBtn, navPosBtn, navMyShiftBtn, navInventoryBtn, navPurchasesBtn, navUsersBtn, navAuditBtn
+);
         UserInfo user = SessionContext.getUser();
         if (user == null) {
             ClientApp.showLogin();
@@ -58,6 +61,7 @@ public class MainShellController {
 
         setNavVisible(navDashboardBtn, isManagerOrAdmin);
         setNavVisible(navPosBtn, true);
+        setNavVisible(navMyShiftBtn, true);
         setNavVisible(navInventoryBtn, isManagerOrAdmin);
         setNavVisible(navPurchasesBtn, isManagerOrAdmin);
         setNavVisible(navUsersBtn, isAdmin);
@@ -80,6 +84,11 @@ public class MainShellController {
     @FXML
     public void showPos() {
         loadView("/client/fxml/PosView.fxml", navPosBtn);
+    }
+
+    @FXML
+    public void showMyShift() {
+        loadView("/client/fxml/MyShiftView.fxml", navMyShiftBtn);
     }
 
     @FXML
