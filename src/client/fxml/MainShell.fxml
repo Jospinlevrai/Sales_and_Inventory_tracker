@@ -43,6 +43,7 @@
                     onAction="#showDashboard"
                     style="-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 13px; -fx-padding: 10 12;"
                     text="Dashboard"/>
+            <Button fx:id="navMyShiftBtn" text="My Sales Today" onAction="#showMyShift" maxWidth="Infinity" alignment="CENTER_LEFT" />
 
             <Button fx:id="navPosBtn" maxWidth="Infinity" alignment="CENTER_LEFT"
                     onAction="#showPos"
